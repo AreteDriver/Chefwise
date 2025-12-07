@@ -268,18 +268,6 @@ const HomeTab = ({ user }) => {
           ))}
         </div>
       </div>
-
-      {/* Info Section */}
-      {!user && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-center">
-          <p className="text-blue-800 mb-2 font-medium">
-            Sign in to unlock all features
-          </p>
-          <p className="text-blue-600 text-sm">
-            Get personalized recipes, manage your pantry, and track your nutrition
-          </p>
-        </div>
-      )}
     </div>
   );
 };

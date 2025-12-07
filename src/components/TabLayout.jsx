@@ -78,7 +78,11 @@ const TabLayout = ({ children, user, activeTab }) => {
                   </button>
                   <button
                     onClick={() => router.push('/profile')}
-                    className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      activeTab === 'profile'
+                        ? 'text-primary bg-primary/10'
+                        : 'text-gray-700 hover:text-primary'
+                    }`}
                   >
                     Profile
                   </button>
