@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from '@/firebase/firebaseConfig';
+import { signOut } from 'firebase/auth';
+import { auth, db } from '@/firebase/firebaseConfig';
 import { DIET_FILTERS } from '@/prompts/recipePrompts';
+import TabLayout from '@/components/TabLayout';
 
 export default function ProfilePage({ user }) {
   const router = useRouter();
@@ -47,32 +49,22 @@ export default function ProfilePage({ user }) {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.push('/');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
+
   if (!user || loading) {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm mb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <button
-              onClick={() => router.push('/')}
-              className="text-2xl font-bold text-primary"
-            >
-              ChefWise
-            </button>
-            <button
-              onClick={() => router.push('/')}
-              className="text-gray-700 hover:text-primary"
-            >
-              ← Back to Home
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <TabLayout user={user} activeTab="profile">
+      <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-2xl font-bold mb-6">Profile Settings</h2>
 
@@ -236,16 +228,26 @@ export default function ProfilePage({ user }) {
               )}
             </div>
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:bg-gray-300"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
+            <div className="space-y-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:bg-gray-300"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
           </form>
         </div>
-      </main>
-    </div>
+      </div>
+    </TabLayout>
   );
 }
