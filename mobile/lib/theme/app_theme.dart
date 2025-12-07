@@ -4,6 +4,11 @@ import 'app_text_styles.dart';
 
 /// ChefWise Material 3 theme configuration
 class AppTheme {
+  // Design system constants
+  static const double borderRadius = 12.0;
+  static const double borderWidth = 1.5;
+  static const double elevation = 2.0;
+  
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
@@ -66,7 +71,7 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
-          side: const BorderSide(color: AppColors.primary, width: 1.5),
+          side: const BorderSide(color: AppColors.primary, width: AppTheme.borderWidth),
           textStyle: AppTextStyles.button,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(

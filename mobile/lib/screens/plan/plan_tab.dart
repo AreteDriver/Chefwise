@@ -4,6 +4,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../services/meal_plan_service.dart';
 import '../../models/meal_plan.dart';
+import '../../models/recipe.dart';
 
 /// Plan Tab - Weekly meal planner
 class PlanTab extends StatelessWidget {
@@ -300,7 +301,7 @@ class _DailyMealCard extends StatelessWidget {
 
 class _MealItem extends StatelessWidget {
   final String mealType;
-  final dynamic recipe;
+  final Recipe recipe;
 
   const _MealItem({
     required this.mealType,

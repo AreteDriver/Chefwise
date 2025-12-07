@@ -3,6 +3,8 @@ import '../models/recipe.dart';
 
 /// Service for managing recipes
 class RecipeService extends ChangeNotifier {
+  static const int maxGeneratedRecipes = 3;
+  
   final List<Recipe> _recipes = [];
   
   List<Recipe> get recipes => List.unmodifiable(_recipes);
@@ -210,7 +212,7 @@ class RecipeService extends ChangeNotifier {
     // In a real app, this would call an AI service
     // For now, return filtered sample recipes
     notifyListeners();
-    return _recipes.take(3).toList();
+    return _recipes.take(maxGeneratedRecipes).toList();
   }
 
   Recipe? getRecipeById(String id) {
