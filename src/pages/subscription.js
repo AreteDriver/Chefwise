@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { loadStripe } from '@stripe/stripe-js';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { PLAN_LIMITS, PLAN_TIERS } from '@/utils/SubscriptionGate';
+import { SUBSCRIPTION_PLANS } from '@/utils/subscriptionConstants';
 import { trackSubscriptionView, trackPortalAccess, trackSubscriptionSuccess } from '@/utils/analytics';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
@@ -23,7 +24,11 @@ export default function SubscriptionPage({ user }) {
       
       // Track successful subscription
       if (success) {
-        trackSubscriptionSuccess('Premium', '9');
+        trackSubscriptionSuccess(
+          SUBSCRIPTION_PLANS.PREMIUM.name,
+          SUBSCRIPTION_PLANS.PREMIUM.price.toString(),
+          user.uid
+        );
       }
     }
   }, [user, router, success, subscription.planTier]);

@@ -6,7 +6,7 @@ This guide explains how to set up and configure the subscription-based tiering s
 
 ChefWise uses Stripe for payment processing and Firebase for user management. The subscription system includes:
 
-- **Free Tier**: Limited features (3 AI recipes/day, 3-day meal plans)
+- **Free Tier**: Limited features (2 AI recipes/day, 3-day meal plans)
 - **Premium Tier**: Unlimited access ($9/month)
 
 ## Prerequisites
@@ -184,9 +184,9 @@ service cloud.firestore {
 
 1. **Free User Experience**:
    - Sign in
-   - Generate 3 recipes (should work)
-   - Try 4th recipe (should show limit message)
-   - Try 7-day meal plan (should work)
+   - Generate 2 recipes (should work)
+   - Try 3rd recipe (should show limit message)
+   - Try 7-day meal plan (should prompt to limit to 3 days or upgrade)
    - Try 30-day meal plan (should prompt upgrade)
 
 2. **Upgrade Flow**:

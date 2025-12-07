@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { loadStripe } from '@stripe/stripe-js';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { trackUpgradeClick } from '@/utils/analytics';
+import { SUBSCRIPTION_PLANS, PLAN_FEATURES } from '@/utils/subscriptionConstants';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -25,35 +26,14 @@ export default function UpgradePage({ user }) {
 
   const plans = [
     {
-      name: 'Free',
-      price: '$0',
-      period: 'forever',
-      features: [
-        '2 AI recipes per day',
-        '1 diet filter',
-        '3-day meal plans',
-        '20 pantry items',
-        '10 saved recipes',
-        'Basic nutrition tracking',
-      ],
+      ...SUBSCRIPTION_PLANS.FREE,
+      features: PLAN_FEATURES.FREE,
       cta: 'Current Plan',
       current: !subscription.isPremium,
     },
     {
-      name: 'Premium',
-      price: '$9',
-      period: '/month',
-      features: [
-        'Unlimited AI recipes',
-        'All diet filters',
-        '30-day meal plans',
-        'Unlimited pantry items',
-        'Unlimited saved recipes',
-        'Advanced macro tracking',
-        'Shopping list export',
-        'Priority support',
-        'No ads',
-      ],
+      ...SUBSCRIPTION_PLANS.PREMIUM,
+      features: PLAN_FEATURES.PREMIUM,
       cta: subscription.isPremium ? 'Current Plan' : 'Upgrade Now',
       highlighted: true,
       current: subscription.isPremium,
@@ -64,7 +44,7 @@ export default function UpgradePage({ user }) {
     if (plan.current || loading) return;
     
     // Track upgrade click
-    trackUpgradeClick(plan.name, '9');
+    trackUpgradeClick(plan.name, plan.price.toString());
     
     setLoading(true);
     setError(null);
@@ -161,7 +141,7 @@ export default function UpgradePage({ user }) {
                 </h3>
                 <div className="mb-6">
                   <span className="text-4xl font-bold text-gray-900">
-                    {plan.price}
+                    {plan.displayPrice}
                   </span>
                   <span className="text-gray-600">{plan.period}</span>
                 </div>

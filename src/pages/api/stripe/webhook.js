@@ -5,8 +5,9 @@ import admin from 'firebase-admin';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Initialize Firebase Admin if not already initialized
-if (!admin.apps.length) {
-  try {
+let db;
+try {
+  if (!admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -14,12 +15,12 @@ if (!admin.apps.length) {
         privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
       }),
     });
-  } catch (error) {
-    console.error('Firebase admin initialization error:', error);
   }
+  db = admin.firestore();
+} catch (error) {
+  console.error('Firebase admin initialization error:', error);
+  // Don't initialize db if admin fails
 }
-
-const db = admin.firestore();
 
 // Disable body parser for webhook
 export const config = {
@@ -31,6 +32,12 @@ export const config = {
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Check if Firebase Admin is initialized
+  if (!db) {
+    console.error('Firebase Admin not initialized - cannot process webhook');
+    return res.status(500).json({ error: 'Server configuration error' });
   }
 
   const buf = await buffer(req);

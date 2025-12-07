@@ -15,6 +15,8 @@ export default async function handler(req, res) {
     }
 
     // Create or retrieve Stripe customer
+    // Note: For better performance, consider storing stripeCustomerId in Firestore
+    // and retrieving it directly instead of using email lookup
     let customer;
     const existingCustomers = await stripe.customers.list({
       email: userEmail,

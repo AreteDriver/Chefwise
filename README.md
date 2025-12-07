@@ -83,7 +83,7 @@ chefwise/
 ChefWise offers two subscription tiers:
 
 ### Free Tier
-- 3 AI recipe generations per day
+- 2 AI recipe generations per day
 - 1 active diet filter
 - Up to 3-day meal plans
 - 20 pantry items

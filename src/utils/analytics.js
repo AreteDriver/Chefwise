@@ -29,12 +29,15 @@ export const trackUpgradeClick = (planName, planPrice) => {
   }
 };
 
-export const trackSubscriptionSuccess = (planName, planPrice) => {
+export const trackSubscriptionSuccess = (planName, planPrice, userId) => {
   if (analytics) {
+    // Generate a unique transaction ID using timestamp and random component
+    const transactionId = `sub_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
     logEvent(analytics, 'purchase', {
       currency: 'USD',
       value: parseFloat(planPrice),
-      transaction_id: `sub_${Date.now()}`,
+      transaction_id: transactionId,
       items: [
         {
           item_name: planName,
