@@ -1,6 +1,14 @@
 # ChefWise — AI Cooking App
 
-ChefWise is a cross-platform AI-driven cooking assistant that generates personalized recipes, meal plans, and nutrition tracking. Built with Next.js, Firebase, and OpenAI API.
+ChefWise is a cross-platform AI-driven cooking assistant that generates personalized recipes, meal plans, and nutrition tracking. Available as a Next.js web app and Flutter mobile app.
+
+## Platforms
+
+### 🌐 Web App (Next.js)
+Built with Next.js, Firebase, and OpenAI API for web browsers.
+
+### 📱 Mobile App (Flutter)
+Native mobile app for iOS and Android with Material 3 design. See [mobile/README.md](mobile/README.md) for details.
 
 ## Overview
 
@@ -44,6 +52,16 @@ ChefWise helps users:
 
 ```
 chefwise/
+ ├─ mobile/                   # Flutter mobile app (NEW)
+ │   ├─ lib/
+ │   │   ├─ models/           # Data models
+ │   │   ├─ screens/          # UI screens
+ │   │   ├─ services/         # State management
+ │   │   ├─ theme/            # Design system
+ │   │   └─ main.dart         # App entry
+ │   ├─ assets/               # Images and icons
+ │   ├─ pubspec.yaml          # Flutter dependencies
+ │   └─ README.md             # Mobile app docs
  ├─ src/
  │   ├─ components/          # React components
  │   │   ├─ RecipeCard.jsx
