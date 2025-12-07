@@ -10,13 +10,18 @@ try {
   const apiKey = functions.config().openai?.key || process.env.OPENAI_API_KEY;
   if (!apiKey) {
     console.warn('OpenAI API key not configured. AI features will be disabled.');
+  } else {
+    openai = new OpenAI({
+      apiKey: apiKey,
+    });
   }
-  openai = new OpenAI({
-    apiKey: apiKey,
-  });
 } catch (error) {
   console.error('Failed to initialize OpenAI:', error);
 }
+
+// Constants
+const MAX_MEAL_PLAN_DAYS = 30;
+const DEFAULT_MAX_RECIPES = 5;
 
 /**
  * Check if user can perform action based on plan tier
@@ -67,7 +72,7 @@ function buildRecipePrompt(dietType, ingredients, preferences = {}) {
   } = preferences;
 
   // Combine pantry contents with provided ingredients
-  const allIngredients = [...new Set([...ingredients, ...(pantryContents || [])])];
+  const allIngredients = [...new Set([...ingredients, ...(pantryContents ?? [])])];
 
   return `
 Generate a healthy ${dietType} recipe using the following ingredients: ${allIngredients.join(', ')}.
@@ -296,8 +301,8 @@ exports.generateMealPlan = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('invalid-argument', 'days and macroGoals are required');
   }
 
-  if (days < 1 || days > 30) {
-    throw new functions.https.HttpsError('invalid-argument', 'days must be between 1 and 30');
+  if (days < 1 || days > MAX_MEAL_PLAN_DAYS) {
+    throw new functions.https.HttpsError('invalid-argument', `days must be between 1 and ${MAX_MEAL_PLAN_DAYS}`);
   }
 
   const prompt = `
@@ -418,7 +423,7 @@ exports.getPantrySuggestions = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('invalid-argument', 'pantryItems array is required');
   }
 
-  const { dietType, allergies, restrictions, maxRecipes = 5 } = preferences || {};
+  const { dietType, allergies, restrictions, maxRecipes = DEFAULT_MAX_RECIPES } = preferences || {};
 
   const prompt = `
 Based on these available pantry ingredients: ${pantryItems.join(', ')}.

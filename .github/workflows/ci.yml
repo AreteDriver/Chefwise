@@ -77,7 +77,6 @@ jobs:
       run: |
         cd functions
         npm run lint --if-present
-      continue-on-error: true
 
   deploy-preview:
     name: Deploy Preview
