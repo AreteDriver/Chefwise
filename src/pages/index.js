@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/firebase/firebaseConfig';
 import { getUserPlanTier } from '@/utils/SubscriptionGate';
 import RecipeCard from '@/components/RecipeCard';
 import SubscriptionBanner from '@/components/SubscriptionBanner';
+import MainLayout from '@/components/MainLayout';
 import useOpenAI from '@/hooks/useOpenAI';
 
 export default function Home({ user }) {
@@ -43,14 +44,6 @@ export default function Home({ user }) {
     }
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
-  };
-
   const handleGenerateRecipe = async () => {
     if (!user) {
       alert('Please sign in to generate recipes');
@@ -85,63 +78,20 @@ export default function Home({ user }) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-primary">ChefWise</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              {user ? (
-                <>
-                  <button
-                    onClick={() => router.push('/pantry')}
-                    className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Pantry
-                  </button>
-                  <button
-                    onClick={() => router.push('/planner')}
-                    className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Planner
-                  </button>
-                  <button
-                    onClick={() => router.push('/tracker')}
-                    className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Tracker
-                  </button>
-                  <button
-                    onClick={() => router.push('/profile')}
-                    className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Profile
-                  </button>
-                  <button
-                    onClick={handleSignOut}
-                    className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
-                  >
-                    Sign Out
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={handleSignIn}
-                  className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  Sign In with Google
-                </button>
-              )}
-            </div>
+    <MainLayout user={user} currentPage="home">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Sign In Section for Non-Authenticated Users */}
+        {!user && (
+          <div className="text-center mb-8">
+            <button
+              onClick={handleSignIn}
+              className="bg-primary text-white px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors text-lg font-semibold"
+            >
+              Sign In with Google to Get Started
+            </button>
           </div>
-        </div>
-      </nav>
+        )}
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {user && (
           <SubscriptionBanner
             isPremium={planTier === 'premium'}
@@ -256,7 +206,7 @@ export default function Home({ user }) {
             </div>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 }
