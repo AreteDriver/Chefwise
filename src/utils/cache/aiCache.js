@@ -88,8 +88,8 @@ class CacheManager {
         // Check if expired
         const now = Date.now();
         if (now - result.timestamp > this.TTL) {
-          // Expired, delete it
-          this.delete(key);
+          // Expired, delete it asynchronously
+          this.delete(key).catch(err => console.error('Cache cleanup error:', err));
           resolve(null);
           return;
         }

@@ -43,11 +43,13 @@ export const useOpenAI = () => {
       const generateRecipeFunction = httpsCallable(functions, 'generateRecipe');
       const response = await generateRecipeFunction(params);
       
-      // Cache the response
+      // Cache the response asynchronously (don't block on cache)
       if (useCache && response.data) {
         const cache = getCache();
         const cacheKey = generateCacheKey({ type: 'recipe', ...params });
-        await cache.set(cacheKey, response.data);
+        cache.set(cacheKey, response.data).catch(err => {
+          console.warn('Failed to cache recipe response:', err);
+        });
       }
       
       setResult(response.data);
@@ -89,11 +91,13 @@ export const useOpenAI = () => {
       const getSubstitutionsFunction = httpsCallable(functions, 'getSubstitutions');
       const response = await getSubstitutionsFunction({ ingredient, ...context });
       
-      // Cache the response
+      // Cache the response asynchronously (don't block on cache)
       if (useCache && response.data) {
         const cache = getCache();
         const cacheKey = generateCacheKey({ type: 'substitution', ingredient, ...context });
-        await cache.set(cacheKey, response.data);
+        cache.set(cacheKey, response.data).catch(err => {
+          console.warn('Failed to cache substitution response:', err);
+        });
       }
       
       setResult(response.data);
@@ -137,11 +141,13 @@ export const useOpenAI = () => {
       const generateMealPlanFunction = httpsCallable(functions, 'generateMealPlan');
       const response = await generateMealPlanFunction(params);
       
-      // Cache the response
+      // Cache the response asynchronously (don't block on cache)
       if (useCache && response.data) {
         const cache = getCache();
         const cacheKey = generateCacheKey({ type: 'mealplan', ...params });
-        await cache.set(cacheKey, response.data);
+        cache.set(cacheKey, response.data).catch(err => {
+          console.warn('Failed to cache meal plan response:', err);
+        });
       }
       
       setResult(response.data);

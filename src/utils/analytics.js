@@ -15,7 +15,7 @@ let performance = null;
  * Initialize analytics (client-side only)
  */
 export const initAnalytics = () => {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && app) {
     try {
       analytics = getAnalytics(app);
       performance = getPerformance(app);
