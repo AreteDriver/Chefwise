@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'services/user_preferences_service.dart';
 import 'services/pantry_service.dart';
 import 'services/meal_plan_service.dart';
+import 'services/recipe_service.dart';
 import 'theme/app_theme.dart';
 import 'screens/onboarding/welcome_screen.dart';
 import 'screens/onboarding/select_goals_screen.dart';
@@ -27,6 +28,7 @@ class ChefWiseApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserPreferencesService()),
         ChangeNotifierProvider(create: (_) => PantryService()),
         ChangeNotifierProvider(create: (_) => MealPlanService()),
+        ChangeNotifierProvider(create: (_) => RecipeService()),
       ],
       child: MaterialApp(
         title: 'ChefWise',

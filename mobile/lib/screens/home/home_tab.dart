@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../services/user_preferences_service.dart';
+import '../../services/recipe_service.dart';
+import '../recipe/recipe_filters_sheet.dart';
+import '../recipe/recipe_results_screen.dart';
 
 /// Home Tab - Main screen with greeting and quick actions
 class HomeTab extends StatelessWidget {
@@ -46,9 +49,7 @@ class HomeTab extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Navigate to recipe generation
-                  },
+                  onPressed: () => _showRecipeFilters(context),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.all(20),
                     minimumSize: const Size(double.infinity, 60),
@@ -80,20 +81,26 @@ class HomeTab extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              SizedBox(
-                height: 200,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: 5,
-                  itemBuilder: (context, index) {
-                    return _QuickPickCard(
-                      title: _getQuickPickTitle(index),
-                      time: '${20 + index * 5} min',
-                      calories: '${300 + index * 50} cal',
-                    );
-                  },
-                ),
+              Consumer<RecipeService>(
+                builder: (context, recipeService, _) {
+                  final recipes = recipeService.recipes.take(5).toList();
+                  return SizedBox(
+                    height: 200,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: recipes.length,
+                      itemBuilder: (context, index) {
+                        final recipe = recipes[index];
+                        return _QuickPickCard(
+                          title: recipe.title,
+                          time: '${recipe.totalTime} min',
+                          calories: '${recipe.macros.calories.toInt()} cal',
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
 
               const SizedBox(height: 24),
@@ -131,15 +138,40 @@ class HomeTab extends StatelessWidget {
     );
   }
 
-  String _getQuickPickTitle(int index) {
-    const titles = [
-      'Grilled Chicken Salad',
-      'Pasta Primavera',
-      'Veggie Stir Fry',
-      'Salmon Bowl',
-      'Quinoa Salad',
-    ];
-    return titles[index];
+  void _showRecipeFilters(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => RecipeFiltersSheet(
+        onGenerate: (filters) {
+          final recipeService = context.read<RecipeService>();
+          final recipes = recipeService.generateRecipes(filters);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RecipeResultsScreen(
+                recipes: recipes,
+                onRegenerate: () {
+                  final newRecipes = recipeService.generateRecipes(filters);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RecipeResultsScreen(
+                        recipes: newRecipes,
+                        onRegenerate: () {},
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 }
 
