@@ -47,7 +47,7 @@ export default function NavigationBar({ user, currentPage = '' }) {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex md:items-center md:space-x-4">
-            {user && visibleNavigation.map((item) => (
+            {visibleNavigation.map((item) => (
               <button
                 key={item.name}
                 onClick={() => handleNavigation(item.href)}
@@ -72,7 +72,7 @@ export default function NavigationBar({ user, currentPage = '' }) {
                 onClick={() => router.push('/')}
                 className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
               >
-                Sign In
+                Get Started
               </button>
             )}
           </div>
