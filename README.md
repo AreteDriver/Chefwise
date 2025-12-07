@@ -14,17 +14,48 @@ ChefWise helps users:
 
 ## Features
 
+### AI-Powered Features
+
+#### 🤖 **AI Recipe Generator**
+The heart of ChefWise - our intelligent recipe generation system powered by GPT-4:
+- **Input Methods**: Generate recipes from:
+  - Natural language prompts ("healthy dinner for two")
+  - Your pantry ingredients (automatic recipe suggestions)
+  - Dietary restrictions and preferences
+  - Macro/calorie targets
+- **Smart Context**: Remembers your dietary preferences, allergies, and cooking skill level
+- **Nutritional Analysis**: Automatic macro calculation (protein, carbs, fats) for every recipe
+- **Recipe Quality**: Detailed ingredients, step-by-step instructions, prep/cook times, and servings
+- **Tech Stack**: OpenAI API (GPT-4) + Next.js + Firebase Cloud Functions
+
+#### 🔄 **Substitution Engine**
+AI-powered ingredient replacement suggestions:
+- Maintains flavor profiles and cooking characteristics
+- Considers dietary restrictions (vegan, gluten-free, etc.)
+- Provides ratio conversions and cooking notes
+- Suggests multiple alternatives ranked by similarity
+- **Tech Stack**: GPT prompt chains + custom algorithms
+
+#### 📅 **AI Meal Planner**
+Intelligent weekly meal planning with nutritional optimization:
+- **Customizable Plans**: 1-30 day meal schedules
+- **Macro Targeting**: Automatically balances protein, carbs, and fats
+- **Pantry Integration**: Prioritizes ingredients you already have
+- **Shopping List Generation**: Auto-creates shopping lists for missing ingredients
+- **Variety Optimization**: Ensures diverse meals across the week
+- **Tech Stack**: React + Chart.js + OpenAI API
+
+### Core Features
+
 | Feature | Description | Tech Stack |
 |---------|-------------|------------|
-| **AI Recipe Generator** | Generates recipes from user prompts or pantry inventory | OpenAI API + Next.js |
 | **Pantry Inventory** | CRUD interface for ingredients with recipe suggestions | Firebase Firestore |
-| **Meal Planner** | Builds daily/weekly meal schedules with macro targets | React + Chart.js |
-| **Macro Tracker** | Calculates protein, carbs, fat, sugar, sodium per meal/day | Chart.js |
-| **Substitution Engine** | Suggests ingredient replacements | GPT prompt chain |
-| **Shopping List** | Auto-generate lists from meal plan | Firebase functions |
+| **Macro Tracker** | Real-time nutrition tracking with visual charts | Chart.js |
 | **Diet Filters** | Mediterranean, Vegan, Keto, Low Fat/Sugar, NAFLD, etc. | Filtered AI prompts |
 | **User Profiles** | Store diet prefs, allergies, saved recipes, macro goals | Firebase Auth + Firestore |
 | **Freemium Model** | Free (2 recipes/day) → Premium (unlimited) | Stripe + Firebase |
+| **Offline Mode** | Local storage for pantry and cached recipes | Service Workers + IndexedDB |
+| **Analytics** | Track usage patterns and feature engagement | Firebase Analytics |
 
 ## Architecture
 
@@ -82,10 +113,19 @@ chefwise/
 
 ### Prerequisites
 
-- Node.js 18+ 
-- Firebase account
-- OpenAI API key
-- Stripe account (for payments)
+#### For Developers:
+- **Node.js 18+** (LTS recommended) - [Download](https://nodejs.org/)
+- **npm** or **yarn** package manager
+- **Git** for version control
+- **Firebase account** - [Sign up](https://firebase.google.com/)
+- **OpenAI API key** - [Get API key](https://platform.openai.com/)
+- **Stripe account** (for payment integration) - [Sign up](https://stripe.com/)
+- Code editor (VS Code recommended)
+
+#### For Users:
+- Modern web browser (Chrome, Firefox, Safari, Edge)
+- Internet connection for AI features
+- (Optional) Firebase account for data sync across devices
 
 ### Installation
 
@@ -201,15 +241,67 @@ vercel deploy
 - `npm run build` - Build for production
 - `npm start` - Start production server
 - `npm run lint` - Run ESLint
+- `npm test` - Run test suite
+
+## User Guide
+
+### How to Generate Recipes Using AI
+
+1. **Quick Recipe Generation**
+   - Navigate to the home page
+   - Enter ingredients you have or a recipe idea (e.g., "chicken and broccoli")
+   - Select your dietary preferences (optional)
+   - Click "Generate Recipe"
+   - View detailed recipe with ingredients, steps, and nutritional info
+
+2. **Generate from Pantry**
+   - Go to the Pantry page
+   - Add your available ingredients
+   - Click "Suggest Recipes"
+   - ChefWise will generate recipes using your pantry items
+   - Save recipes you like to your collection
+
+3. **Create a Meal Plan**
+   - Navigate to the Meal Planner page
+   - Set your macro goals (calories, protein, carbs, fats)
+   - Choose number of days (1-30)
+   - Add dietary restrictions if needed
+   - Click "Generate Meal Plan"
+   - Review and adjust as needed
+   - Export shopping list for missing ingredients
+
+4. **Track Your Nutrition**
+   - Go to the Macro Tracker page
+   - Log your meals throughout the day
+   - View real-time macro breakdown
+   - Check progress against your daily goals
+   - View historical trends with charts
+
+### Tips for Best Results
+
+- **Be Specific**: Include cooking methods and cuisines (e.g., "Italian pasta" vs. "pasta")
+- **Set Preferences**: Update your profile with dietary restrictions and allergies
+- **Use Pantry**: Keep your pantry updated for better recipe suggestions
+- **Save Favorites**: Star recipes you love for quick access later
+- **Adjust Servings**: Scale recipes up or down based on your needs
 
 ## Future Modules
 
-- Community recipe sharing
-- AI voice assistant mode
-- Offline mode (local cache)
-- Photo recognition for ingredients
-- Wearable integration
-- Multi-language support
+### Upcoming AI Enhancements
+- **Shopping List Generation**: Automatically create shopping lists tailored to missing pantry ingredients
+- **Voice Assistant**: Voice interaction for hands-free recipe navigation while cooking
+- **Image Recognition**: Camera-based ingredient scanning using pre-trained ML models
+- **Recipe Variations**: AI-generated recipe variations based on available ingredients
+- **Cooking Tips**: Context-aware cooking suggestions and technique explanations
+
+### Platform Enhancements
+- Community recipe sharing and ratings
+- Offline mode with local caching (in progress)
+- Photo recognition for pantry inventory
+- Wearable integration (Apple Health, Google Fit)
+- Multi-language support (i18n) - **Coming Soon**
+- Progressive Web App (PWA) features
+- Real-time collaborative meal planning
 
 ## Contributing
 
