@@ -2,27 +2,49 @@
 
 ChefWise is a cross-platform AI-driven cooking assistant that generates personalized recipes, meal plans, and nutrition tracking. Built with Next.js, Firebase, and OpenAI API.
 
+[![CI/CD Pipeline](https://github.com/AreteDriver/Chefwise/actions/workflows/ci.yml/badge.svg)](https://github.com/AreteDriver/Chefwise/actions/workflows/ci.yml)
+
 ## Overview
 
 ChefWise helps users:
 - Generate AI-powered recipes from ingredients or prompts
-- Manage pantry inventory
+- Get intelligent recipe suggestions based on pantry contents
+- Manage pantry inventory with smart recommendations
 - Create personalized meal plans with macro tracking
 - Track daily nutrition and macros
 - Get ingredient substitutions
 - Generate shopping lists
 
+## Enhanced AI Features
+
+ChefWise now includes advanced AI capabilities powered by OpenAI GPT-4:
+
+### Dynamic Recipe Generation
+- **Pantry-Based Creation**: Automatically generates recipes using available pantry ingredients
+- **Dietary Preferences**: Supports Mediterranean, Vegan, Keto, Low Fat/Sugar, NAFLD, and more
+- **Allergy Management**: Strict allergen avoidance in all generated recipes
+- **Dietary Restrictions**: Handles multiple dietary restrictions simultaneously
+- **Smart Suggestions**: AI analyzes your pantry and suggests optimal recipes
+
+### Intelligent Features
+- **Pantry Suggestions**: Get up to 5 recipe ideas based on what you have
+- **Match Percentage**: See how well each recipe matches your available ingredients
+- **Missing Ingredients**: Clearly shows what additional items you need
+- **Enhanced Error Handling**: Robust error management with user-friendly messages
+- **Extensible Architecture**: Designed for easy addition of new AI features
+
 ## Features
 
 | Feature | Description | Tech Stack |
 |---------|-------------|------------|
-| **AI Recipe Generator** | Generates recipes from user prompts or pantry inventory | OpenAI API + Next.js |
-| **Pantry Inventory** | CRUD interface for ingredients with recipe suggestions | Firebase Firestore |
-| **Meal Planner** | Builds daily/weekly meal schedules with macro targets | React + Chart.js |
+| **AI Recipe Generator** | Generates recipes from user prompts or pantry inventory with dietary restrictions | OpenAI GPT-4 + Next.js |
+| **Pantry-Based Suggestions** | AI suggests recipes based on available pantry contents | OpenAI API + Cloud Functions |
+| **Pantry Inventory** | CRUD interface for ingredients with smart recipe suggestions | Firebase Firestore |
+| **Meal Planner** | Builds daily/weekly meal schedules with macro targets and pantry integration | React + Chart.js |
 | **Macro Tracker** | Calculates protein, carbs, fat, sugar, sodium per meal/day | Chart.js |
-| **Substitution Engine** | Suggests ingredient replacements | GPT prompt chain |
+| **Substitution Engine** | Suggests ingredient replacements with nutritional comparison | GPT-4 prompt chain |
 | **Shopping List** | Auto-generate lists from meal plan | Firebase functions |
-| **Diet Filters** | Mediterranean, Vegan, Keto, Low Fat/Sugar, NAFLD, etc. | Filtered AI prompts |
+| **Diet Filters** | Mediterranean, Vegan, Keto, Low Fat/Sugar, NAFLD, etc. | Enhanced AI prompts |
 | **User Profiles** | Store diet prefs, allergies, saved recipes, macro goals | Firebase Auth + Firestore |
 | **Freemium Model** | Free (2 recipes/day) → Premium (unlimited) | Stripe + Firebase |
 
@@ -153,31 +175,73 @@ STRIPE_SECRET_KEY=your_stripe_secret
 ## AI Prompt Examples
 
 ### Recipe Generation
+```javascript
+{
+  dietType: 'Mediterranean',
+  ingredients: ['chicken', 'tomatoes', 'olive oil', 'garlic'],
+  preferences: {
+    allergies: ['nuts'],
+    restrictions: ['gluten-free'],
+    servings: 4,
+    cookTime: 45,
+    difficulty: 'medium',
+    pantryContents: ['rice', 'herbs', 'lemon']
+  }
+}
 ```
-Generate a healthy [diet_type] recipe using: [ingredient_list].
-Return JSON with title, ingredients, steps, prep_time, macros.
+
+### Pantry Suggestions
+```javascript
+{
+  pantryItems: ['eggs', 'milk', 'flour', 'butter', 'cheese'],
+  preferences: {
+    dietType: 'vegetarian',
+    allergies: [],
+    restrictions: [],
+    maxRecipes: 5
+  }
+}
 ```
 
 ### Substitution
 ```
-Suggest top 3 ingredient substitutions for [ingredient] 
+Suggest top 3 ingredient substitutions for butter 
 that maintain flavor, texture, and diet compatibility.
+Diet: vegan, Allergens: dairy
 ```
 
 ### Meal Plan
-```
-Create a 7-day meal plan hitting [protein, fat, carbs] goals 
-based on the user's saved preferences and pantry items.
+```javascript
+{
+  days: 7,
+  macroGoals: {
+    protein: 150,
+    carbs: 200,
+    fat: 60,
+    calories: 2000
+  },
+  pantryItems: ['chicken', 'rice', 'vegetables'],
+  preferences: {
+    dietType: 'balanced',
+    allergies: ['shellfish'],
+    mealsPerDay: 3
+  }
+}
 ```
 
 ## Key Components
 
 - **`firebaseConfig.js`** – Firebase initialization
-- **`useOpenAI.js`** – Custom hook for AI API calls with rate limiting
+- **`useOpenAI.js`** – Custom hook for AI API calls with enhanced error handling and rate limiting
+- **`functions/index.js`** – Cloud Functions with enhanced AI service integration
+  - `generateRecipe` – Dynamic recipe generation with pantry integration
+  - `getPantrySuggestions` – Intelligent recipe suggestions from available ingredients
+  - `getSubstitutions` – Ingredient substitution recommendations
+  - `generateMealPlan` – Comprehensive meal planning with macro tracking
 - **`MealPlanner.jsx`** – Weekly meal plan UI with charts
 - **`SubscriptionGate.js`** – Restricts features by plan tier
 - **`RecipeCard.jsx`** – Displays recipe results
-- **`PantryInventory.jsx`** – Manage ingredients
+- **`PantryInventory.jsx`** – Manage ingredients with AI suggestions
 - **`MacroTracker.jsx`** – Daily nutrition tracking
 
 ## Deployment
@@ -201,6 +265,48 @@ vercel deploy
 - `npm run build` - Build for production
 - `npm start` - Start production server
 - `npm run lint` - Run ESLint
+- `npm run test` - Run tests (if configured)
+
+## CI/CD Pipeline
+
+ChefWise uses GitHub Actions for continuous integration and deployment:
+
+### Automated Workflows
+
+- **Linting**: Automatically runs ESLint on every pull request
+- **Testing**: Executes test suite to ensure code quality
+- **Build Verification**: Validates that the application builds successfully
+- **Multi-Node Testing**: Tests on Node.js 18.x and 20.x
+- **Firebase Functions Check**: Validates Cloud Functions code
+- **Preview Deployments**: Automatic preview builds for pull requests
+- **Production Deployment**: Automated deployment to production on main branch
+
+### Setting Up CI/CD
+
+1. **Required Secrets**: Configure the following in GitHub repository settings:
+   - `NEXT_PUBLIC_FIREBASE_API_KEY`
+   - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+   - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+   - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+   - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+   - `NEXT_PUBLIC_FIREBASE_APP_ID`
+   - `FIREBASE_SERVICE_ACCOUNT` (for Firebase Hosting deployment)
+   - `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (for Vercel deployment)
+
+2. **Branch Protection**: Enable branch protection rules on `main`:
+   - Require status checks to pass before merging
+   - Require branches to be up to date before merging
+   - Require pull request reviews
+
+3. **Deployment Options**:
+   - **Firebase Hosting**: Uncomment Firebase deployment step in workflow
+   - **Vercel**: Uncomment Vercel deployment step in workflow
+
+### Workflow Triggers
+
+- **On Push**: Runs full CI/CD pipeline on `main` and `develop` branches
+- **On Pull Request**: Runs linting, testing, and build verification
+- **Manual**: Can be triggered manually from GitHub Actions tab
 
 ## Future Modules
 
