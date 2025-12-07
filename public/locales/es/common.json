@@ -1,0 +1,110 @@
+{
+  "common": {
+    "app_name": "ChefWise",
+    "welcome": "Bienvenido a ChefWise",
+    "loading": "Cargando...",
+    "error": "Error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "clear": "Limpiar"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "pantry": "Despensa",
+    "planner": "Planificador de Comidas",
+    "tracker": "Seguimiento de Macros",
+    "profile": "Perfil",
+    "upgrade": "Mejorar"
+  },
+  "recipe": {
+    "generate": "Generar Receta",
+    "title": "Receta",
+    "ingredients": "Ingredientes",
+    "instructions": "Instrucciones",
+    "prep_time": "Tiempo de Preparación",
+    "cook_time": "Tiempo de Cocción",
+    "servings": "Porciones",
+    "calories": "Calorías",
+    "save_recipe": "Guardar Receta",
+    "no_recipes": "No se encontraron recetas",
+    "enter_ingredients": "Ingrese ingredientes o idea de receta",
+    "diet_preferences": "Preferencias Dietéticas",
+    "generate_from_pantry": "Generar desde Despensa"
+  },
+  "pantry": {
+    "title": "Inventario de Despensa",
+    "add_item": "Agregar Artículo",
+    "item_name": "Nombre del Artículo",
+    "quantity": "Cantidad",
+    "unit": "Unidad",
+    "category": "Categoría",
+    "no_items": "No hay artículos en la despensa",
+    "suggest_recipes": "Sugerir Recetas"
+  },
+  "meal_planner": {
+    "title": "Planificador de Comidas",
+    "days": "Días",
+    "macro_goals": "Objetivos de Macros",
+    "protein": "Proteína",
+    "carbs": "Carbohidratos",
+    "fat": "Grasa",
+    "generate_plan": "Generar Plan",
+    "shopping_list": "Lista de Compras",
+    "breakfast": "Desayuno",
+    "lunch": "Almuerzo",
+    "dinner": "Cena",
+    "snacks": "Meriendas"
+  },
+  "macro_tracker": {
+    "title": "Seguimiento de Macros",
+    "daily_totals": "Totales Diarios",
+    "target": "Objetivo",
+    "remaining": "Restante",
+    "log_meal": "Registrar Comida",
+    "calories": "Calorías",
+    "protein": "Proteína (g)",
+    "carbs": "Carbohidratos (g)",
+    "fat": "Grasa (g)",
+    "fiber": "Fibra (g)",
+    "sugar": "Azúcar (g)",
+    "sodium": "Sodio (mg)"
+  },
+  "auth": {
+    "sign_in": "Iniciar Sesión",
+    "sign_out": "Cerrar Sesión",
+    "sign_up": "Registrarse",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "forgot_password": "¿Olvidó su Contraseña?",
+    "google_sign_in": "Iniciar sesión con Google"
+  },
+  "subscription": {
+    "free_plan": "Plan Gratuito",
+    "premium_plan": "Plan Premium",
+    "upgrade_now": "Mejorar Ahora",
+    "daily_limit": "Límite diario de recetas",
+    "unlimited_recipes": "Recetas ilimitadas",
+    "all_features": "Todas las funciones desbloqueadas"
+  },
+  "errors": {
+    "something_went_wrong": "Algo salió mal",
+    "try_again": "Por favor, inténtelo de nuevo",
+    "network_error": "Error de red. Verifique su conexión.",
+    "invalid_input": "Entrada inválida",
+    "not_found": "No encontrado",
+    "unauthorized": "Acceso no autorizado"
+  },
+  "accessibility": {
+    "menu": "Menú",
+    "close_menu": "Cerrar menú",
+    "skip_to_content": "Saltar al contenido principal",
+    "loading_message": "El contenido se está cargando",
+    "search_recipes": "Buscar recetas",
+    "filter_recipes": "Filtrar recetas por dieta"
+  }
+}
