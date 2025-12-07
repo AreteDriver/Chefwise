@@ -46,6 +46,8 @@ ChefWise helps users:
 chefwise/
  ├─ src/
  │   ├─ components/          # React components
+ │   │   ├─ NavigationBar.jsx  # Reusable navigation with mobile support
+ │   │   ├─ Layout.jsx         # Layout wrapper for state persistence
  │   │   ├─ RecipeCard.jsx
  │   │   ├─ MealPlanner.jsx
  │   │   ├─ PantryInventory.jsx
@@ -174,11 +176,55 @@ based on the user's saved preferences and pantry items.
 
 - **`firebaseConfig.js`** – Firebase initialization
 - **`useOpenAI.js`** – Custom hook for AI API calls with rate limiting
+- **`NavigationBar.jsx`** – Reusable navigation component with active state management and mobile responsiveness
+- **`Layout.jsx`** – Application layout wrapper that preserves state across navigation
 - **`MealPlanner.jsx`** – Weekly meal plan UI with charts
 - **`SubscriptionGate.js`** – Restricts features by plan tier
 - **`RecipeCard.jsx`** – Displays recipe results
 - **`PantryInventory.jsx`** – Manage ingredients
 - **`MacroTracker.jsx`** – Daily nutrition tracking
+
+## Navigation Architecture
+
+The application uses a centralized navigation system that provides:
+
+### NavigationBar Component
+- **Reusable across all pages** – Single source of truth for navigation
+- **Active state management** – Highlights current page with visual feedback
+- **Mobile-responsive** – Hamburger menu for mobile devices, full navigation on desktop
+- **Authentication-aware** – Shows different options for signed-in vs guest users
+- **Consistent branding** – ChefWise logo and styling across all pages
+
+### State Preservation
+- **Persistent Layout** – Uses Next.js layout pattern to maintain state during navigation
+- **Client-side routing** – Fast navigation without full page reloads
+- **Component state retention** – Form data and UI state preserved when switching tabs
+
+### Responsive Design
+- **Desktop (md and above)**: Full horizontal navigation bar with all menu items visible
+- **Mobile (below md)**: Hamburger menu with dropdown navigation
+- **Touch-friendly**: Large tap targets optimized for mobile interaction
+- **Accessibility**: Proper ARIA labels and keyboard navigation support
+
+### Usage Example
+
+```javascript
+// All pages automatically use the Layout and NavigationBar
+// No need to manually add navigation to each page
+export default function MyPage({ user }) {
+  return (
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Your page content */}
+    </main>
+  );
+}
+```
+
+The navigation automatically:
+- Highlights the active page
+- Shows user authentication status
+- Provides sign in/out functionality
+- Adapts to screen size
 
 ## Deployment
 
