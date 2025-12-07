@@ -5,6 +5,9 @@ import { db } from '@/firebase/firebaseConfig';
 import useOpenAI from '@/hooks/useOpenAI';
 import RecipeCard from './RecipeCard';
 
+const MAX_PANTRY_ITEMS_TO_LOAD = 10;
+const MAX_PANTRY_ITEMS_TO_DISPLAY = 5;
+
 const HomeTab = ({ user }) => {
   const router = useRouter();
   const [pantryItems, setPantryItems] = useState([]);
@@ -20,7 +23,7 @@ const HomeTab = ({ user }) => {
         const q = query(
           collection(db, 'pantryItems'),
           where('userId', '==', user.uid),
-          limit(10)
+          limit(MAX_PANTRY_ITEMS_TO_LOAD)
         );
         const snapshot = await getDocs(q);
         const items = snapshot.docs.map(doc => ({
@@ -193,7 +196,7 @@ const HomeTab = ({ user }) => {
             )}
             {pantryItems.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-4">
-                {pantryItems.slice(0, 5).map((item) => (
+                {pantryItems.slice(0, MAX_PANTRY_ITEMS_TO_DISPLAY).map((item) => (
                   <span
                     key={item.id}
                     className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700"
@@ -201,9 +204,9 @@ const HomeTab = ({ user }) => {
                     {item.name}
                   </span>
                 ))}
-                {pantryItems.length > 5 && (
+                {pantryItems.length > MAX_PANTRY_ITEMS_TO_DISPLAY && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                    +{pantryItems.length - 5} more
+                    +{pantryItems.length - MAX_PANTRY_ITEMS_TO_DISPLAY} more
                   </span>
                 )}
               </div>
