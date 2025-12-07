@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import MealPlanner from '@/components/MealPlanner';
-import NavigationBar from '@/components/NavigationBar';
 import useOpenAI from '@/hooks/useOpenAI';
 
 export default function PlannerPage({ user }) {
@@ -37,10 +36,7 @@ export default function PlannerPage({ user }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavigationBar user={user} />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {showForm && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h3 className="text-xl font-semibold mb-4">Meal Plan Settings</h3>
@@ -127,11 +123,10 @@ export default function PlannerPage({ user }) {
           </div>
         )}
 
-        <MealPlanner
-          mealPlan={mealPlan}
-          onGeneratePlan={() => setShowForm(true)}
-        />
-      </main>
-    </div>
+      <MealPlanner
+        mealPlan={mealPlan}
+        onGeneratePlan={() => setShowForm(true)}
+      />
+    </main>
   );
 }

@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/firebase/firebaseConfig';
 import { DIET_FILTERS } from '@/prompts/recipePrompts';
-import NavigationBar from '@/components/NavigationBar';
 
 export default function ProfilePage({ user }) {
   const router = useRouter();
@@ -53,10 +52,7 @@ export default function ProfilePage({ user }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavigationBar user={user} />
-
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-2xl font-bold mb-6">Profile Settings</h2>
 
@@ -225,11 +221,10 @@ export default function ProfilePage({ user }) {
               disabled={saving}
               className="w-full bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:bg-gray-300"
             >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </form>
-        </div>
-      </main>
-    </div>
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </form>
+      </div>
+    </main>
   );
 }

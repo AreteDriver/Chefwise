@@ -2,6 +2,7 @@ import '@/styles/globals.css';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/firebase/firebaseConfig';
+import Layout from '@/components/Layout';
 
 export default function App({ Component, pageProps }) {
   const [user, setUser] = useState(null);
@@ -27,5 +28,9 @@ export default function App({ Component, pageProps }) {
     );
   }
 
-  return <Component {...pageProps} user={user} />;
+  // Use the Layout for pages, allowing each page to define its own layout if needed
+  // This approach preserves state during navigation and provides a consistent layout
+  const getLayout = Component.getLayout || ((page) => <Layout user={user}>{page}</Layout>);
+
+  return getLayout(<Component {...pageProps} user={user} />);
 }

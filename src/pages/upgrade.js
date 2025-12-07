@@ -1,5 +1,4 @@
 import { useRouter } from 'next/router';
-import NavigationBar from '@/components/NavigationBar';
 
 export default function UpgradePage({ user }) {
   const router = useRouter();
@@ -53,10 +52,7 @@ export default function UpgradePage({ user }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavigationBar user={user} />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Choose Your Plan
@@ -131,14 +127,13 @@ export default function UpgradePage({ user }) {
         </div>
 
         <div className="mt-12 text-center">
-          <p className="text-gray-600 mb-4">
-            All plans include access to our AI recipe generator and nutrition tracking
-          </p>
-          <p className="text-sm text-gray-500">
-            Cancel anytime. No hidden fees. 30-day money-back guarantee.
-          </p>
-        </div>
-      </main>
-    </div>
+        <p className="text-gray-600 mb-4">
+          All plans include access to our AI recipe generator and nutrition tracking
+        </p>
+        <p className="text-sm text-gray-500">
+          Cancel anytime. No hidden fees. 30-day money-back guarantee.
+        </p>
+      </div>
+    </main>
   );
 }

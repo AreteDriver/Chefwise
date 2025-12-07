@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import { getUserPlanTier } from '@/utils/SubscriptionGate';
 import RecipeCard from '@/components/RecipeCard';
 import SubscriptionBanner from '@/components/SubscriptionBanner';
-import NavigationBar from '@/components/NavigationBar';
 import useOpenAI from '@/hooks/useOpenAI';
 
 export default function Home({ user }) {
@@ -53,10 +52,7 @@ export default function Home({ user }) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <NavigationBar user={user} />
-
+    <>
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {user && (
@@ -174,6 +170,6 @@ export default function Home({ user }) {
           </div>
         )}
       </main>
-    </div>
+    </>
   );
 }

@@ -1,6 +1,5 @@
 import { useRouter } from 'next/router';
 import PantryInventory from '@/components/PantryInventory';
-import NavigationBar from '@/components/NavigationBar';
 import useOpenAI from '@/hooks/useOpenAI';
 
 export default function PantryPage({ user }) {
@@ -27,15 +26,11 @@ export default function PantryPage({ user }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavigationBar user={user} />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <PantryInventory
-          userId={user.uid}
-          onSuggestRecipes={handleSuggestRecipes}
-        />
-      </main>
-    </div>
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <PantryInventory
+        userId={user.uid}
+        onSuggestRecipes={handleSuggestRecipes}
+      />
+    </main>
   );
 }
