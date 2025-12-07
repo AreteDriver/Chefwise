@@ -225,15 +225,25 @@ export default function ProfilePage({ user }) {
               <p className="text-gray-600">
                 Current Plan: <span className="font-semibold capitalize">{profile?.planTier || 'free'}</span>
               </p>
-              {profile?.planTier !== 'premium' && (
-                <button
-                  type="button"
-                  onClick={() => router.push('/upgrade')}
-                  className="mt-3 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  Upgrade to Premium
-                </button>
-              )}
+              <div className="mt-3 flex gap-3">
+                {profile?.planTier !== 'premium' ? (
+                  <button
+                    type="button"
+                    onClick={() => router.push('/upgrade')}
+                    className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+                  >
+                    Upgrade to Premium
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => router.push('/subscription')}
+                    className="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                  >
+                    Manage Subscription
+                  </button>
+                )}
+              </div>
             </div>
 
             <button

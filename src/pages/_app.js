@@ -2,6 +2,7 @@ import '@/styles/globals.css';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/firebase/firebaseConfig';
+import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 
 export default function App({ Component, pageProps }) {
   const [user, setUser] = useState(null);
@@ -27,5 +28,9 @@ export default function App({ Component, pageProps }) {
     );
   }
 
-  return <Component {...pageProps} user={user} />;
+  return (
+    <SubscriptionProvider user={user}>
+      <Component {...pageProps} user={user} />
+    </SubscriptionProvider>
+  );
 }
