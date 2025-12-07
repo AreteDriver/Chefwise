@@ -1,10 +1,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import MealPlanner from '@/components/MealPlanner';
+import PremiumFeature, { PremiumBadge } from '@/components/PremiumFeature';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { PLAN_LIMITS } from '@/utils/SubscriptionGate';
 import useOpenAI from '@/hooks/useOpenAI';
+import { trackFeatureUsage } from '@/utils/analytics';
 
 export default function PlannerPage({ user }) {
   const router = useRouter();
+  const subscription = useSubscription();
   const [mealPlan, setMealPlan] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [macroGoals, setMacroGoals] = useState({
@@ -21,8 +26,18 @@ export default function PlannerPage({ user }) {
     return null;
   }
 
+  const maxDays = PLAN_LIMITS[subscription.planTier]?.mealPlanDays || 3;
+
   const handleGeneratePlan = async () => {
+    // Check if exceeding plan limits
+    if (days > maxDays) {
+      alert(`Your plan allows up to ${maxDays}-day meal plans. Upgrade to Premium for longer plans.`);
+      return;
+    }
+
     try {
+      trackFeatureUsage('meal_plan_generation', subscription.planTier);
+      
       const plan = await generateMealPlan({
         days,
         macroGoals,
@@ -65,6 +80,9 @@ export default function PlannerPage({ user }) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Number of Days
+                  {days > maxDays && (
+                    <PremiumBadge className="ml-2" />
+                  )}
                 </label>
                 <input
                   type="number"
@@ -74,6 +92,14 @@ export default function PlannerPage({ user }) {
                   onChange={(e) => setDays(parseInt(e.target.value))}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
+                <p className="text-sm text-gray-500 mt-1">
+                  Your plan allows up to {maxDays} days
+                  {days > maxDays && (
+                    <span className="text-primary font-medium">
+                      {' '}(Upgrade for longer plans)
+                    </span>
+                  )}
+                </p>
               </div>
 
               <div>

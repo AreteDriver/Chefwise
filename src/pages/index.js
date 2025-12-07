@@ -3,23 +3,19 @@ import { useRouter } from 'next/router';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/firebase/firebaseConfig';
-import { getUserPlanTier } from '@/utils/SubscriptionGate';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import RecipeCard from '@/components/RecipeCard';
 import SubscriptionBanner from '@/components/SubscriptionBanner';
+import { PremiumBadge } from '@/components/PremiumFeature';
 import useOpenAI from '@/hooks/useOpenAI';
+import { trackFeatureUsage } from '@/utils/analytics';
 
 export default function Home({ user }) {
   const router = useRouter();
-  const [planTier, setPlanTier] = useState('free');
+  const subscription = useSubscription();
   const [prompt, setPrompt] = useState('');
   const [selectedDiet, setSelectedDiet] = useState('');
   const { loading, error, result, generateRecipe } = useOpenAI();
-
-  useEffect(() => {
-    if (user) {
-      getUserPlanTier(user.uid).then(setPlanTier);
-    }
-  }, [user]);
 
   const handleSignIn = async () => {
     try {
@@ -63,6 +59,9 @@ export default function Home({ user }) {
     }
 
     try {
+      // Track feature usage
+      trackFeatureUsage('recipe_generation', subscription.planTier);
+      
       await generateRecipe({
         dietType: selectedDiet || 'general',
         ingredients: prompt.split(',').map(i => i.trim()),
@@ -92,6 +91,9 @@ export default function Home({ user }) {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-primary">ChefWise</h1>
+              {user && subscription.isPremium && (
+                <PremiumBadge className="ml-3" />
+              )}
             </div>
             <div className="flex items-center space-x-4">
               {user ? (
@@ -144,7 +146,7 @@ export default function Home({ user }) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {user && (
           <SubscriptionBanner
-            isPremium={planTier === 'premium'}
+            isPremium={subscription.isPremium}
             onUpgrade={() => router.push('/upgrade')}
           />
         )}

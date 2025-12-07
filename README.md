@@ -78,6 +78,31 @@ chefwise/
  └─ README.md
 ```
 
+## Subscription Tiers
+
+ChefWise offers two subscription tiers:
+
+### Free Tier
+- 3 AI recipe generations per day
+- 1 active diet filter
+- Up to 3-day meal plans
+- 20 pantry items
+- 10 saved recipes
+- Basic nutrition tracking
+
+### Premium Tier ($9/month)
+- **Unlimited** AI recipe generations
+- **All** diet filters
+- Up to **30-day** meal plans
+- **Unlimited** pantry items
+- **Unlimited** saved recipes
+- Advanced macro tracking
+- Shopping list export
+- Priority support
+- Ad-free experience
+
+For detailed setup instructions, see [SUBSCRIPTION_SETUP.md](SUBSCRIPTION_SETUP.md).
+
 ## Getting Started
 
 ### Prerequisites
@@ -106,7 +131,9 @@ cd functions && npm install && cd ..
 cp .env.example .env.local
 ```
 
-Edit `.env.local` and add your Firebase and OpenAI credentials.
+Edit `.env.local` and add your Firebase, OpenAI, and Stripe credentials.
+
+**Important**: For detailed Stripe setup and subscription configuration, see [SUBSCRIPTION_SETUP.md](SUBSCRIPTION_SETUP.md).
 
 4. Initialize Firebase:
 ```bash
