@@ -243,6 +243,15 @@ vercel deploy
 - `npm run lint` - Run ESLint
 - `npm test` - Run test suite
 
+## Documentation
+
+- **[User Guide](#user-guide)** - How to use ChefWise features
+- **[Architecture](./ARCHITECTURE.md)** - Technical architecture and AI workflows
+- **[Contributing](./CONTRIBUTING.md)** - Contribution guidelines
+- **[Testing Guide](./docs/TESTING.md)** - How to write and run tests
+- **[Offline Mode](./docs/OFFLINE_MODE.md)** - Using ChefWise offline
+- **[Analytics & Privacy](./docs/ANALYTICS.md)** - Data tracking and privacy
+
 ## User Guide
 
 ### How to Generate Recipes Using AI
@@ -302,6 +311,41 @@ vercel deploy
 - Multi-language support (i18n) - **Coming Soon**
 - Progressive Web App (PWA) features
 - Real-time collaborative meal planning
+
+## Performance & Optimization
+
+### AI Response Caching
+ChefWise implements intelligent caching to reduce API calls and improve response times:
+- **IndexedDB Storage**: Persistent cache across sessions
+- **Memory Cache**: Fast in-memory fallback
+- **24-Hour TTL**: Automatic cache invalidation
+- **Smart Cache Keys**: Hash-based deduplication
+
+Usage is automatic - no configuration needed. Cached responses are used when available, with fresh API calls made only when necessary.
+
+### Pagination & Infinite Scroll
+Recipe lists and search results support:
+- **Pagination**: Navigate through pages of results
+- **Infinite Scroll**: Load more as you scroll
+- **Configurable Page Size**: 10, 20, 50, or 100 items per page
+
+### Offline Support
+Service worker enables offline functionality:
+- Cache static assets automatically
+- Store API responses for offline access
+- Background sync for pantry updates
+- Graceful degradation when offline
+
+See [Offline Mode Guide](./docs/OFFLINE_MODE.md) for details.
+
+### Analytics & Monitoring
+Firebase Analytics tracks:
+- Feature usage patterns
+- Performance metrics
+- Error rates
+- User engagement
+
+All tracking is privacy-focused and GDPR compliant. See [Analytics Guide](./docs/ANALYTICS.md).
 
 ## Contributing
 
