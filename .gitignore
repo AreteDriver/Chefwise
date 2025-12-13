@@ -36,8 +36,6 @@ next-env.d.ts
 *.swo
 *.sublime-workspace
 *.sublime-project
-.DS_Store
-Thumbs.db
 
 # Firebase
 .firebase/
@@ -47,9 +45,6 @@ ui-debug.log
 
 # Vercel
 .vercel
-
-# TypeScript
-*.tsbuildinfo
 
 # Misc
 *.log
