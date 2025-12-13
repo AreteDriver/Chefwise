@@ -6,6 +6,8 @@ ChefWise transforms traditional manual cooking and meal planning processes into 
 
 [![CI/CD Pipeline](https://github.com/AreteDriver/Chefwise/actions/workflows/ci.yml/badge.svg)](https://github.com/AreteDriver/Chefwise/actions/workflows/ci.yml)
 
+> **Note on Metrics**: Quantified outcomes presented in this document represent projected efficiency gains based on typical manual workflow times, AI processing capabilities, and industry benchmarks for meal planning and dietary management. Actual results may vary based on user behavior, usage patterns, and system configuration. Performance metrics are intended to illustrate potential operational improvements when adopting AI-driven workflow automation.
+
 ## AI Workflow Automation Platform
 
 ChefWise operationalizes AI to automate end-to-end culinary workflows:
@@ -384,7 +386,7 @@ ChefWise demonstrates how operational AI can transform traditional manual proces
 ✅ **90% automation** of weekly planning workflows  
 ✅ **60% improvement** in dietary goal adherence  
 ✅ **40% reduction** in food waste through intelligent optimization  
-✅ **<30 second** AI-powered recipe generation  
+✅ **<30 seconds** AI-powered recipe generation  
 ✅ **95%+ accuracy** in automated nutritional tracking  
 ✅ **Enterprise-grade** scalability with serverless architecture  
 
