@@ -158,6 +158,8 @@ chefwise/
  │   └─ README.md             # Mobile app docs
  ├─ src/
  │   ├─ components/          # React components
+ │   │   ├─ NavigationBar.jsx  # Reusable navigation with mobile support
+ │   │   ├─ Layout.jsx         # Layout wrapper for state persistence
  │   │   ├─ RecipeCard.jsx
  │   │   ├─ MealPlanner.jsx
  │   │   ├─ PantryInventory.jsx
