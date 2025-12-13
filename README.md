@@ -6,14 +6,16 @@ ChefWise is a cross-platform AI-driven cooking assistant that generates personal
 
 ## Overview
 
-ChefWise helps users:
-- Generate AI-powered recipes from ingredients or prompts
-- Get intelligent recipe suggestions based on pantry contents
-- Manage pantry inventory with smart recommendations
-- Create personalized meal plans with macro tracking
-- Track daily nutrition and macros
-- Get ingredient substitutions
-- Generate shopping lists
+ChefWise is your intelligent kitchen companion that leverages advanced AI to transform how you cook, plan meals, and manage nutrition. Whether you're a beginner learning to cook or an experienced chef seeking inspiration, ChefWise provides:
+
+- **AI-Powered Recipe Creation**: Generate personalized recipes from simple prompts or available ingredients using GPT-4
+- **Intelligent Meal Planning**: Create optimized weekly meal plans that match your dietary goals and nutritional targets
+- **Smart Pantry Management**: Get recipe suggestions based on what you already have, minimizing waste
+- **Dietary Coaching**: Personalized guidance for various dietary preferences (Mediterranean, Vegan, Keto, NAFLD, etc.)
+- **Nutrition Tracking**: Real-time macro and nutrient analysis to help you meet your health goals
+- **Cooking Education**: Learn new techniques and get ingredient substitutions with detailed explanations
+
+**Why ChefWise?** Traditional recipe apps show you static recipes. ChefWise uses AI to understand your unique needs, available ingredients, dietary restrictions, and cooking skills to create truly personalized cooking experiences.
 
 ## Enhanced AI Features
 
@@ -35,18 +37,29 @@ ChefWise now includes advanced AI capabilities powered by OpenAI GPT-4:
 
 ## Features
 
+### 🤖 Interactive AI Modules
+
 | Feature | Description | Tech Stack |
 |---------|-------------|------------|
-| **AI Recipe Generator** | Generates recipes from user prompts or pantry inventory with dietary restrictions | OpenAI GPT-4 + Next.js |
-| **Pantry-Based Suggestions** | AI suggests recipes based on available pantry contents | OpenAI API + Cloud Functions |
-| **Pantry Inventory** | CRUD interface for ingredients with smart recipe suggestions | Firebase Firestore |
-| **Meal Planner** | Builds daily/weekly meal schedules with macro targets and pantry integration | React + Chart.js |
-| **Macro Tracker** | Calculates protein, carbs, fat, sugar, sodium per meal/day | Chart.js |
-| **Substitution Engine** | Suggests ingredient replacements with nutritional comparison | GPT-4 prompt chain |
-| **Shopping List** | Auto-generate lists from meal plan | Firebase functions |
-| **Diet Filters** | Mediterranean, Vegan, Keto, Low Fat/Sugar, NAFLD, etc. | Enhanced AI prompts |
-| **User Profiles** | Store diet prefs, allergies, saved recipes, macro goals | Firebase Auth + Firestore |
-| **Freemium Model** | Free (2 recipes/day) → Premium (unlimited) | Stripe + Firebase |
+| **AI Recipe Generator** | Interactive recipe creation from natural language prompts or pantry inventory. Supports all dietary restrictions and allergies. | OpenAI GPT-4 + Next.js |
+| **Pantry-Based Suggestions** | AI analyzes your pantry and suggests up to 5 recipes with match percentages and missing ingredients | OpenAI API + Cloud Functions |
+| **Pantry Inventory** | Smart ingredient management with CRUD interface and AI-powered recipe suggestions | Firebase Firestore |
+| **Interactive Meal Planner** | Build daily/weekly meal schedules (1-30 days) with real-time macro targeting and pantry integration | React + Chart.js |
+| **Macro Tracker** | Visual nutrition tracking with daily/weekly charts showing protein, carbs, fat, sugar, sodium | Chart.js + React |
+| **Substitution Engine** | Get AI-recommended ingredient replacements with nutritional comparison and diet compatibility | GPT-4 prompt chain |
+| **Shopping List Generator** | Auto-generate shopping lists from meal plans, considering pantry inventory | Firebase functions |
+| **Dietary Coaching** | Personalized dietary guidance for Mediterranean, Vegan, Keto, Low Fat/Sugar, NAFLD, and more | Enhanced AI prompts |
+| **User Profiles** | Store dietary preferences, allergies, saved recipes, macro goals, and cooking preferences | Firebase Auth + Firestore |
+| **Freemium Model** | Free tier (2 recipes/day) with Premium upgrade (unlimited access) | Stripe + Firebase |
+
+### 💡 Key Capabilities
+
+- **Natural Language Processing**: Describe what you want in plain English ("quick dinner for two, low carb")
+- **Allergy-Safe Cooking**: Strict allergen avoidance with "MUST avoid" enforcement
+- **Multi-Dietary Support**: Handle multiple dietary restrictions simultaneously
+- **Real-Time Collaboration**: Changes sync instantly across devices
+- **Offline-First Design**: Core features work without internet (planned)
+- **Educational Content**: Learn cooking techniques and nutritional information as you cook
 
 ## Architecture
 
@@ -99,6 +112,196 @@ chefwise/
  ├─ firestore.indexes.json  # Database indexes
  └─ README.md
 ```
+
+## Usage
+
+### 🎯 User Scenarios
+
+ChefWise adapts to various cooking scenarios. Here are common use cases:
+
+#### Scenario 1: Creating a Recipe from Scratch
+
+**Goal**: Generate a healthy dinner recipe for tonight
+
+1. **Navigate to Home Page** (Recipe Generator)
+2. **Describe Your Needs**:
+   ```
+   "I want a healthy Mediterranean dinner for 2 people, 
+    about 30 minutes cooking time, using chicken"
+   ```
+3. **Set Preferences**:
+   - Select dietary type: Mediterranean
+   - Add allergies: None
+   - Set servings: 2
+   - Cooking time: 30 minutes
+4. **Click "Generate Recipe"**
+5. **Review Results**:
+   - Full recipe with ingredients and instructions
+   - Nutritional breakdown (calories, protein, carbs, fat)
+   - Cooking time and difficulty level
+   - Option to save to your profile
+
+**AI Response Example**:
+```
+Mediterranean Lemon Herb Chicken
+Servings: 2 | Time: 30 min | Difficulty: Easy
+
+Ingredients:
+- 2 chicken breasts (6 oz each)
+- 2 tbsp olive oil
+- 1 lemon (juiced and zested)
+- 3 cloves garlic, minced
+- 1 tsp dried oregano
+- Fresh parsley, chopped
+- Salt and pepper to taste
+- 1 cup cherry tomatoes
+- 1/2 cup kalamata olives
+
+Instructions:
+1. Season chicken with salt, pepper, and oregano...
+[Full detailed instructions]
+
+Nutrition per serving:
+Calories: 385 | Protein: 42g | Carbs: 12g | Fat: 18g
+```
+
+#### Scenario 2: Generating a Weekly Meal Plan
+
+**Goal**: Plan a week of meals aligned with fitness goals
+
+1. **Navigate to Meal Planner** (`/planner`)
+2. **Set Your Goals**:
+   - Duration: 7 days
+   - Macro targets:
+     - Calories: 2000/day
+     - Protein: 150g
+     - Carbs: 200g
+     - Fat: 65g
+   - Meals per day: 3
+3. **Configure Preferences**:
+   - Dietary type: Balanced/High Protein
+   - Allergies: Shellfish
+   - Available pantry items: chicken, rice, eggs, vegetables
+4. **Click "Generate Meal Plan"**
+5. **Review Your Plan**:
+   - Day-by-day breakdown with all meals
+   - Visual charts showing daily macro distribution
+   - Total nutritional summary
+   - Automated shopping list for missing ingredients
+6. **Save and Track**:
+   - Save meal plan to your profile
+   - Track daily progress in Macro Tracker
+
+**AI Meal Plan Output**:
+```
+Day 1:
+  Breakfast: Greek Yogurt Bowl with Berries (350 cal, 25g protein)
+  Lunch: Grilled Chicken Salad (450 cal, 40g protein)
+  Dinner: Salmon with Roasted Vegetables (600 cal, 45g protein)
+  Daily Total: 1,950 cal | 150g protein | 195g carbs | 63g fat ✓
+
+Day 2:
+  Breakfast: Protein Pancakes with Banana (380 cal, 28g protein)
+  ...
+[Complete 7-day plan]
+
+Shopping List:
+✓ Already have: chicken, rice, eggs
+Need to buy: salmon (2 fillets), Greek yogurt (1 lb), berries (2 cups)...
+```
+
+#### Scenario 3: Using AI Pantry Suggestions
+
+**Goal**: Use up ingredients before they expire
+
+1. **Navigate to Pantry** (`/pantry`)
+2. **Add Your Ingredients**:
+   - Eggs (12 remaining)
+   - Spinach (1 bunch)
+   - Mushrooms (8 oz)
+   - Cheese (cheddar, 4 oz)
+   - Milk (2 cups)
+3. **Click "Get Recipe Suggestions"**
+4. **Review AI Suggestions**:
+   ```
+   Based on your pantry, here are 5 recipe ideas:
+   
+   1. Spinach and Mushroom Frittata (95% match)
+      Missing: onion, herbs
+      Time: 25 min | Servings: 4
+   
+   2. Cheesy Scrambled Eggs with Vegetables (100% match)
+      Missing: none!
+      Time: 10 min | Servings: 2
+   
+   3. Vegetarian Breakfast Burrito (85% match)
+      Missing: tortillas, bell peppers
+      Time: 20 min | Servings: 4
+   ...
+   ```
+5. **Select a Recipe**: Click to generate full details
+6. **Cook and Update**: Mark used ingredients to keep pantry current
+
+#### Scenario 4: Dietary Coaching for Special Needs
+
+**Goal**: Manage NAFLD (Non-Alcoholic Fatty Liver Disease) diet
+
+1. **Navigate to Profile** (`/profile`)
+2. **Set Up Dietary Profile**:
+   - Primary diet type: NAFLD-friendly
+   - Restrictions: Low fat, low sugar, no alcohol
+   - Allergies: None
+   - Health goals: Liver health, weight management
+3. **Generate Recipes** with automatic NAFLD filtering:
+   - All recipes avoid high-fat, high-sugar ingredients
+   - Focus on lean proteins, whole grains, vegetables
+   - Portion control and balanced macros
+4. **Track Progress**:
+   - Monitor daily fat and sugar intake in Macro Tracker
+   - Get weekly nutrition reports
+   - Receive AI coaching tips specific to NAFLD
+
+**AI Coaching Tips**:
+```
+💡 NAFLD Tip: Your meals this week averaged 45g fat/day (within target)
+   Great choices: Grilled fish, steamed vegetables, quinoa
+   Consider adding: More leafy greens for liver health
+   
+📊 Progress: Sugar intake down 20% from last week! Keep it up!
+```
+
+### 🔧 Advanced Features
+
+#### Ingredient Substitutions
+Ask AI for alternatives:
+```
+"What can I use instead of butter in this recipe? I'm vegan."
+
+AI Response:
+1. Coconut Oil (1:1 ratio) - Best for baking, adds subtle flavor
+2. Vegan Butter (1:1 ratio) - Neutral flavor, similar texture
+3. Avocado (3/4 cup per 1 cup butter) - Healthier, denser texture
+
+Recommendation: For cookies, use vegan butter for best results.
+Nutrition comparison: [detailed breakdown]
+```
+
+#### Macro Tracking
+Monitor your nutrition daily:
+- Log meals manually or select from meal plan
+- View daily charts (pie charts for macro distribution)
+- Compare actual vs. target macros
+- Track weekly trends
+
+### 📱 Mobile & Cross-Platform
+
+ChefWise is fully responsive and works on:
+- Desktop browsers (Chrome, Firefox, Safari, Edge)
+- Mobile browsers (iOS Safari, Chrome Android)
+- Tablet devices
+- Progressive Web App (PWA) support (planned)
+
+---
 
 ## Getting Started
 
@@ -319,7 +522,35 @@ ChefWise uses GitHub Actions for continuous integration and deployment:
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request.
+Contributions are welcome! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) guide for detailed information on:
+
+- Setting up your development environment
+- Code style and best practices
+- Working with AI features
+- Testing and validation
+- Pull request process
+
+See the [CONTRIBUTING.md](CONTRIBUTING.md) file for comprehensive guidelines.
+
+## Repository Topics
+
+This repository is tagged with the following topics for discoverability:
+
+- **ai** - Artificial Intelligence powered features
+- **cooking-assistant** - Smart cooking guidance and recipe generation
+- **meal-planning** - Intelligent meal planning capabilities
+- **dietary-coaching** - Personalized dietary guidance and support
+- **nutrient-analysis** - Comprehensive nutrition tracking and analysis
+- **recipe-generator** - AI-powered recipe creation
+- **nextjs** - Built with Next.js framework
+- **firebase** - Backend powered by Firebase
+- **openai** - Integration with OpenAI GPT-4
+
+To add or update topics on GitHub, repository administrators can:
+1. Go to the repository homepage
+2. Click the ⚙️ settings icon next to "About"
+3. Add topics in the "Topics" field
+4. Save changes
 
 ## License
 
