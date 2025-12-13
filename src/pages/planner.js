@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import MealPlanner from '@/components/MealPlanner';
+import MainLayout from '@/components/MainLayout';
 import useOpenAI from '@/hooks/useOpenAI';
 
 export default function PlannerPage({ user }) {
@@ -36,27 +37,8 @@ export default function PlannerPage({ user }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm mb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <button
-              onClick={() => router.push('/')}
-              className="text-2xl font-bold text-primary"
-            >
-              ChefWise
-            </button>
-            <button
-              onClick={() => router.push('/')}
-              className="text-gray-700 hover:text-primary"
-            >
-              ← Back to Home
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <MainLayout user={user} currentPage="planner">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {showForm && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h3 className="text-xl font-semibold mb-4">Meal Plan Settings</h3>
@@ -147,7 +129,7 @@ export default function PlannerPage({ user }) {
           mealPlan={mealPlan}
           onGeneratePlan={() => setShowForm(true)}
         />
-      </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

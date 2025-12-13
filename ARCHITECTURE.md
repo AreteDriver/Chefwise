@@ -25,6 +25,8 @@
         ┌─────────────────────────────────────────┐
         │         COMPONENT LAYER                 │
         ├─────────────────────────────────────────┤
+        │  • NavigationBar (Centralized)          │
+        │  • MainLayout (Page Wrapper)            │
         │  • RecipeCard                           │
         │  • MealPlanner                          │
         │  • PantryInventory                      │
@@ -377,38 +379,51 @@ Generate Recipe
 ```
 App (_app.js)
 │
-├── Home (index.js)
-│   ├── SubscriptionBanner
-│   ├── RecipeCard
-│   └── Navigation
-│
-├── Pantry (pantry.js)
-│   └── PantryInventory
-│       ├── Item List
-│       └── Add Item Form
-│
-├── Planner (planner.js)
-│   └── MealPlanner
-│       ├── Day Selector
-│       ├── Meal Cards
-│       ├── Charts (Doughnut, Bar)
-│       └── Shopping List
-│
-├── Tracker (tracker.js)
-│   └── MacroTracker
-│       ├── Progress Bars
-│       ├── Bar Chart
-│       └── Nutrient Summary
-│
-├── Profile (profile.js)
-│   ├── User Settings
-│   ├── Diet Preferences
-│   ├── Macro Goals
-│   └── Subscription Info
-│
-└── Upgrade (upgrade.js)
-    ├── Plan Comparison
-    └── Payment (Stripe)
+├── PageStateProvider (Context)
+│   │
+│   ├── Home (index.js)
+│   │   ├── MainLayout
+│   │   │   └── NavigationBar
+│   │   ├── SubscriptionBanner
+│   │   └── RecipeCard
+│   │
+│   ├── Pantry (pantry.js)
+│   │   ├── MainLayout
+│   │   │   └── NavigationBar
+│   │   └── PantryInventory
+│   │       ├── Item List
+│   │       └── Add Item Form
+│   │
+│   ├── Planner (planner.js)
+│   │   ├── MainLayout
+│   │   │   └── NavigationBar
+│   │   └── MealPlanner
+│   │       ├── Day Selector
+│   │       ├── Meal Cards
+│   │       ├── Charts (Doughnut, Bar)
+│   │       └── Shopping List
+│   │
+│   ├── Tracker (tracker.js)
+│   │   ├── MainLayout
+│   │   │   └── NavigationBar
+│   │   └── MacroTracker
+│   │       ├── Progress Bars
+│   │       ├── Bar Chart
+│   │       └── Nutrient Summary
+│   │
+│   ├── Profile (profile.js)
+│   │   ├── MainLayout
+│   │   │   └── NavigationBar
+│   │   ├── User Settings
+│   │   ├── Diet Preferences
+│   │   ├── Macro Goals
+│   │   └── Subscription Info
+│   │
+│   └── Upgrade (upgrade.js)
+│       ├── MainLayout
+│       │   └── NavigationBar
+│       ├── Plan Comparison
+│       └── Payment (Stripe)
 ```
 
 ## Database Schema
@@ -585,6 +600,108 @@ generateMealPlan
 5. **Optimistic Updates**: UI updates before server confirms
 6. **Real-time Sync**: Only active data synced
 7. **Image Optimization**: Next.js Image component
+
+## Navigation System Architecture
+
+The application uses a centralized navigation system with the following components:
+
+### NavigationBar Component
+
+**Location:** `/src/components/NavigationBar.jsx`
+
+**Features:**
+- Centralized navigation logic across all pages
+- Dynamic active state highlighting based on current page
+- Responsive design with mobile hamburger menu
+- Automatic show/hide of authenticated routes based on user state
+- Handles sign out functionality
+
+**Usage:**
+```jsx
+<NavigationBar user={user} currentPage="home" />
+```
+
+### MainLayout Component
+
+**Location:** `/src/components/MainLayout.jsx`
+
+**Purpose:**
+- Wraps all pages with consistent navigation structure
+- Reduces code duplication across pages
+- Maintains consistent layout and styling
+
+**Usage:**
+```jsx
+<MainLayout user={user} currentPage="pantry">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {/* Page content */}
+  </div>
+</MainLayout>
+```
+
+### PageStateContext
+
+**Location:** `/src/contexts/PageStateContext.jsx`
+
+**Purpose:**
+- Provides state persistence across page navigations (similar to Flutter's IndexedStack)
+- Allows pages to save and restore their state
+- Prevents unnecessary re-initialization of page data
+
+**API:**
+- `savePageState(pageKey, state)` - Save state for a page
+- `getPageState(pageKey)` - Retrieve saved state for a page
+- `clearPageState(pageKey)` - Clear state for a specific page
+- `clearAllPageStates()` - Clear all saved states
+
+**Usage:**
+```jsx
+import { usePageState } from '@/contexts/PageStateContext';
+
+function MyPage() {
+  const { savePageState, getPageState } = usePageState();
+  
+  // Save state when navigating away
+  useEffect(() => {
+    return () => savePageState('mypage', { data: myData });
+  }, []);
+  
+  // Restore state on mount
+  useEffect(() => {
+    const savedState = getPageState('mypage');
+    if (savedState) {
+      setMyData(savedState.data);
+    }
+  }, []);
+}
+```
+
+### Navigation Flow
+
+```
+User clicks navigation item
+    ↓
+NavigationBar handles routing
+    ↓
+Next.js router navigates to new page
+    ↓
+PageStateProvider preserves previous page state
+    ↓
+New page loads with MainLayout
+    ↓
+NavigationBar shows active state for current page
+    ↓
+Page can restore previous state from context
+```
+
+### Benefits
+
+1. **Modularity**: Navigation logic is isolated in a single component
+2. **Maintainability**: Changes to navigation only require updates in one place
+3. **Performance**: State persistence prevents unnecessary re-fetching of data
+4. **Responsiveness**: Built-in mobile menu with smooth transitions
+5. **Consistency**: All pages use the same navigation structure
+6. **DRY Principle**: Eliminates duplicate navigation code across pages
 
 ---
 

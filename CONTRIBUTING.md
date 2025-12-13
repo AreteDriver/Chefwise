@@ -14,296 +14,369 @@ Thank you for your interest in contributing to ChefWise! This document provides 
 
 ## Getting Started
 
-### First Time Contributors
-
-Welcome! We're excited to have you contribute to ChefWise. Here's how to get started:
-
-1. **Find an Issue**: Look for issues labeled `good-first-issue` or `help-wanted`
-2. **Fork the repository**: Click the "Fork" button on GitHub
-3. **Clone your fork**: `git clone https://github.com/YOUR_USERNAME/Chefwise.git`
-4. **Set up development environment**:
+1. **Fork the repository**
+2. **Clone your fork**: 
    ```bash
+   git clone https://github.com/YOUR_USERNAME/Chefwise.git
    cd Chefwise
-   npm install
-   cp .env.example .env.local
-   # Add your API keys to .env.local
    ```
-5. **Create a new branch**: `git checkout -b feature/your-feature-name`
-6. **Make your changes** and test thoroughly
-7. **Submit a Pull Request**
+3. **Create a new branch**: 
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+4. **Install dependencies**: 
+   ```bash
+   npm install
+   cd functions && npm install && cd ..
+   ```
+5. **Set up your environment variables** (see `.env.example`):
+   ```bash
+   cp .env.example .env.local
+   ```
 
-### Development Environment Setup
+## Environment Setup
 
-### Development Environment Setup
+### Required Environment Variables
 
-**Required Tools:**
-- Node.js 18+ (LTS recommended)
-- npm or yarn
-- Git
-- Code editor (VS Code recommended with ESLint extension)
+Create a `.env.local` file in the root directory with:
 
-**Optional but Recommended:**
-- Firebase CLI: `npm install -g firebase-tools`
-- React Developer Tools browser extension
-- Redux DevTools (if state management expands)
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+OPENAI_API_KEY=your_openai_api_key
+```
 
-**Setup Steps:**
+### Firebase Setup
 
-1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/Chefwise.git`
-3. Create a new branch: `git checkout -b feature/your-feature-name`
-4. Install dependencies: `npm install`
-5. Set up your environment variables (see `.env.example`)
+1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+2. Enable Authentication, Firestore, and Cloud Functions
+3. Copy your Firebase configuration to `.env.local`
+4. Deploy Firebase rules and indexes:
+   ```bash
+   firebase deploy --only firestore:rules,firestore:indexes
+   ```
+
+### OpenAI API Setup
+
+1. Get an API key from [OpenAI Platform](https://platform.openai.com/)
+2. Add the key to your `.env.local` and Firebase Functions config:
+   ```bash
+   firebase functions:config:set openai.key="YOUR_API_KEY"
+   ```
 
 ## Development Workflow
 
-1. Make your changes in your feature branch
-2. Write or update tests if applicable
-3. Run linting: `npm run lint`
-4. Test your changes locally: `npm run dev`
-5. Commit your changes with a descriptive message
-6. Push to your fork: `git push origin feature/your-feature-name`
-7. Create a Pull Request
+### Running Locally
+
+1. **Start the development server**:
+   ```bash
+   npm run dev
+   ```
+   Visit [http://localhost:3000](http://localhost:3000)
+
+2. **Run Firebase Functions locally** (optional):
+   ```bash
+   cd functions
+   npm run serve
+   ```
+
+### Testing Your Changes
+
+1. **Run linting**:
+   ```bash
+   npm run lint
+   ```
+
+2. **Run tests** (if available):
+   ```bash
+   npm run test
+   ```
+
+3. **Build the project**:
+   ```bash
+   npm run build
+   ```
+
+4. **Manual testing**: 
+   - Test all affected features in the UI
+   - Verify AI functions work correctly
+   - Check error handling scenarios
+   - Test with different dietary preferences and restrictions
+
+## Working with AI Features
+
+### Understanding the AI Architecture
+
+ChefWise uses a modular AI service architecture:
+
+```
+User Request → useOpenAI Hook → Firebase Functions → OpenAI API → Response Processing → User
+```
+
+### Adding a New AI Feature
+
+1. **Define the prompt** in `functions/index.js`:
+   ```javascript
+   function buildNewFeaturePrompt(params) {
+     return `Your prompt template here...`;
+   }
+   ```
+
+2. **Create the Cloud Function**:
+   ```javascript
+   exports.newAIFeature = functions.https.onCall(async (data, context) => {
+     // Authentication check
+     if (!context.auth) {
+       throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+     }
+     
+     // Validate OpenAI availability
+     if (!openai) {
+       throw new functions.https.HttpsError('unavailable', 'AI service is not configured');
+     }
+     
+     // Input validation
+     // ... your validation logic
+     
+     try {
+       const completion = await openai.chat.completions.create({
+         model: 'gpt-4',
+         messages: [
+           { role: 'system', content: 'System prompt' },
+           { role: 'user', content: buildNewFeaturePrompt(data) }
+         ],
+         temperature: 0.7,
+         max_tokens: 2000,
+       });
+       
+       const result = parseAIResponse(completion.choices[0].message.content);
+       return result;
+     } catch (error) {
+       // Error handling
+       throw new functions.https.HttpsError('internal', 'Failed: ' + error.message);
+     }
+   });
+   ```
+
+3. **Add hook method** in `src/hooks/useOpenAI.js`:
+   ```javascript
+   const newAIFeature = async (params) => {
+     setLoading(true);
+     setError(null);
+     
+     try {
+       const newFeatureFunction = httpsCallable(functions, 'newAIFeature');
+       const response = await newFeatureFunction(params);
+       setResult(response.data);
+       return response.data;
+     } catch (err) {
+       const errorMessage = err.message || 'Failed to execute feature';
+       setError(errorMessage);
+       console.error('Feature error:', err);
+       throw err;
+     } finally {
+       setLoading(false);
+     }
+   };
+   ```
+
+4. **Export the new method**:
+   ```javascript
+   return {
+     loading,
+     error,
+     result,
+     generateRecipe,
+     generateSubstitutions,
+     generateMealPlan,
+     getPantrySuggestions,
+     newAIFeature, // Add your new feature
+   };
+   ```
+
+### Best Practices for AI Features
+
+- **Always validate input** before calling OpenAI API
+- **Handle errors gracefully** with user-friendly messages
+- **Parse responses safely** using the `parseAIResponse` helper
+- **Set appropriate token limits** to control costs
+- **Test with edge cases** (empty inputs, special characters, etc.)
+- **Consider rate limiting** for resource-intensive features
+- **Document your prompts** clearly for future maintenance
+
+### Dietary Restrictions and Preferences
+
+When working with dietary features:
+
+- **Always respect allergen restrictions** - use "MUST avoid" language in prompts
+- **Support multiple dietary types** simultaneously
+- **Validate dietary combinations** for safety
+- **Test with common allergens**: nuts, dairy, gluten, shellfish, soy
+- **Consider cultural dietary restrictions**: halal, kosher, etc.
 
 ## Code Style
 
 - Use ES6+ JavaScript syntax
 - Follow React best practices and hooks patterns
 - Use functional components over class components
-- Keep components small and focused (Single Responsibility Principle)
-- Write meaningful variable and function names (use camelCase)
-- Add JSDoc comments for complex logic and public APIs
-- Use Prettier for code formatting (config in `.prettierrc`)
-- Follow the project's ESLint rules
-
-**Component Structure:**
-```jsx
-// 1. Imports
-import React, { useState } from 'react';
-
-// 2. Component
-export const MyComponent = ({ prop1, prop2 }) => {
-  // 3. Hooks
-  const [state, setState] = useState(null);
-  
-  // 4. Event handlers
-  const handleClick = () => {
-    // logic
-  };
-  
-  // 5. Render
-  return (
-    <div>
-      {/* JSX */}
-    </div>
-  );
-};
-```
-
-**Naming Conventions:**
-- Components: `PascalCase` (e.g., `RecipeCard.jsx`)
-- Hooks: `camelCase` with `use` prefix (e.g., `useOpenAI.js`)
-- Utilities: `camelCase` (e.g., `macroCalculator.js`)
-- Constants: `UPPER_SNAKE_CASE` (e.g., `API_ENDPOINTS`)
-
-## Testing Guidelines
-
-We use Jest and React Testing Library for testing. All new features should include tests.
-
-**Test Coverage Requirements:**
-- Components: Test rendering and user interactions
-- Hooks: Test state changes and side effects
-- Utilities: Test edge cases and error handling
-- API calls: Use mocks (see `__mocks__` directory)
-
-**Writing Tests:**
-```javascript
-// MyComponent.test.jsx
-import { render, screen, fireEvent } from '@testing-library/react';
-import MyComponent from './MyComponent';
-
-describe('MyComponent', () => {
-  it('renders correctly', () => {
-    render(<MyComponent />);
-    expect(screen.getByText('Expected Text')).toBeInTheDocument();
-  });
-
-  it('handles user interaction', () => {
-    render(<MyComponent />);
-    fireEvent.click(screen.getByRole('button'));
-    expect(screen.getByText('Updated Text')).toBeInTheDocument();
-  });
-});
-```
-
-**Running Tests:**
-```bash
-npm test              # Run all tests
-npm test -- --watch   # Run in watch mode
-npm test -- --coverage # Generate coverage report
-```
+- Keep components small and focused (< 300 lines)
+- Write meaningful variable and function names
+- Add JSDoc comments for functions
+- Add comments for complex logic only
 
 ## Commit Messages
 
-Use clear, descriptive commit messages following the Conventional Commits specification:
+Use clear, descriptive commit messages following conventional commits:
 
-**Format:**
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-**Types:**
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, no logic change)
-- `refactor`: Code refactoring
-- `test`: Adding or updating tests
-- `chore`: Maintenance tasks
-- `perf`: Performance improvements
-
-**Examples:**
-```bash
-feat(recipe): Add AI-powered ingredient substitution
-fix(pantry): Resolve duplicate item bug
-docs(readme): Update installation instructions
-test(hooks): Add tests for useOpenAI hook
-refactor(components): Simplify RecipeCard logic
-perf(cache): Implement response caching for AI calls
-```
+- `feat: Add pantry-based recipe suggestions`
+- `fix: Fix AI response parsing for markdown code blocks`
+- `docs: Update AI feature documentation`
+- `style: Format code with prettier`
+- `refactor: Improve error handling in AI functions`
+- `test: Add tests for recipe generation`
+- `chore: Update dependencies`
 
 ## Pull Request Guidelines
 
-Before submitting a PR, ensure:
+### Before Submitting
 
-**Checklist:**
-- [ ] Code follows the style guidelines
-- [ ] All tests pass (`npm test`)
-- [ ] New tests added for new features
-- [ ] Linting passes (`npm run lint`)
+- [ ] Code passes linting (`npm run lint`)
+- [ ] All tests pass (`npm run test`)
 - [ ] Build succeeds (`npm run build`)
+- [ ] Manual testing completed
 - [ ] Documentation updated (if needed)
-- [ ] No console errors or warnings
-- [ ] Accessibility considerations addressed
+- [ ] Environment variables documented (if added)
 
-**PR Description Should Include:**
-1. **What**: Clear description of changes
-2. **Why**: Reason for the changes
-3. **How**: Implementation approach
-4. **Testing**: How you tested the changes
-5. **Screenshots**: For UI changes (required)
-6. **Related Issues**: Link to issues (e.g., "Fixes #123")
+### PR Description Template
 
-**Example PR Description:**
 ```markdown
-## What
-Adds caching layer for AI recipe generation to improve performance
+## Description
+Brief description of changes
 
-## Why
-Reduces API calls and improves response time for frequently requested recipes
-
-## How
-- Implemented IndexedDB caching with hash-based keys
-- Added cache validation and TTL (24 hours)
-- Updated useOpenAI hook to check cache before API calls
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
 
 ## Testing
-- Added unit tests for cache logic
-- Manually tested with 100+ recipe generations
-- Verified cache invalidation after TTL
+Describe how you tested your changes
 
 ## Screenshots
-[Before/After performance comparison]
+Add screenshots for UI changes
 
-Fixes #42
+## Checklist
+- [ ] Linting passes
+- [ ] Build succeeds
+- [ ] Manual testing completed
+- [ ] Documentation updated
 ```
 
-## Issue Labels
+### PR Review Process
 
-We use labels to categorize and prioritize issues:
+1. Automated CI/CD checks must pass
+2. At least one maintainer review required
+3. Address all feedback and requested changes
+4. Maintain clean commit history (squash if needed)
+5. Once approved, maintainer will merge
 
-**Priority Labels:**
-- `priority: high` - Critical issues that need immediate attention
-- `priority: medium` - Important but not urgent
-- `priority: low` - Nice to have
+## CI/CD Pipeline
 
-**Type Labels:**
-- `bug` - Something isn't working
-- `feature` - New feature request
-- `documentation` - Documentation improvements
-- `enhancement` - Improvement to existing feature
-- `question` - Further information requested
+### Understanding the Pipeline
 
-**Status Labels:**
-- `good-first-issue` - Good for newcomers
-- `help-wanted` - Extra attention needed
-- `in-progress` - Being worked on
-- `blocked` - Blocked by other issues
+The CI/CD pipeline runs on every push and pull request:
 
-**Area Labels:**
-- `area: ai` - AI/OpenAI related
-- `area: ui` - User interface
-- `area: backend` - Firebase/Cloud Functions
-- `area: performance` - Performance optimization
-- `area: testing` - Testing infrastructure
+1. **Linting**: ESLint checks code quality
+2. **Testing**: Runs test suite (if configured)
+3. **Build**: Validates successful build
+4. **Functions Check**: Validates Cloud Functions
+5. **Preview Deploy**: Creates preview for PRs
+6. **Production Deploy**: Deploys to production (main branch only)
 
-## Code Review Process
+### Pipeline Requirements
 
-1. **Submission**: Create a PR from your fork
-2. **Automated Checks**: CI runs linting, tests, and builds
-3. **Review**: Maintainers review your code
-4. **Feedback**: Address any comments or requested changes
-5. **Approval**: Once approved, your PR will be merged
-6. **Recognition**: Contributors are recognized in release notes
+- All status checks must pass before merging
+- Build artifacts are saved for 7 days
+- Failed jobs are reported in PR comments
 
-**Review Criteria:**
-- Code quality and maintainability
-- Test coverage and quality
-- Documentation completeness
-- Performance implications
-- Security considerations
-- Accessibility compliance
+### Local CI Validation
 
-**Response Time:**
-- We aim to provide initial feedback within 48 hours
-- Larger PRs may take longer to review
-- Feel free to ping maintainers after 3 days if no response
+Run the same checks locally before pushing:
 
-## Community Guidelines
+```bash
+# Run all checks
+npm run lint && npm run test && npm run build
 
-**Be Respectful:**
-- Use welcoming and inclusive language
-- Respect differing viewpoints and experiences
-- Accept constructive criticism gracefully
-- Focus on what's best for the community
+# Check functions
+cd functions && npm run lint && cd ..
+```
 
-**Code of Conduct:**
-We follow the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/). 
-Unacceptable behavior can be reported to the maintainers.
+## Firebase Functions Development
+
+### Local Testing
+
+1. **Install Firebase CLI**:
+   ```bash
+   npm install -g firebase-tools
+   ```
+
+2. **Run functions emulator**:
+   ```bash
+   firebase emulators:start --only functions
+   ```
+
+3. **Test functions locally** using the Firebase emulator
+
+### Deploying Functions
+
+```bash
+# Deploy all functions
+firebase deploy --only functions
+
+# Deploy specific function
+firebase deploy --only functions:generateRecipe
+```
+
+## Common Issues and Solutions
+
+### Build Failures
+
+- **Issue**: Firebase auth error during build
+  - **Solution**: Add default/test values for Firebase env vars in CI
+
+- **Issue**: OpenAI API errors
+  - **Solution**: Check API key is configured correctly
+
+### AI Function Issues
+
+- **Issue**: JSON parsing errors
+  - **Solution**: Use `parseAIResponse()` helper to handle markdown code blocks
+
+- **Issue**: Token limit exceeded
+  - **Solution**: Adjust `max_tokens` parameter or simplify prompt
 
 ## Getting Help
 
-**Questions?** 
-- Open a [Discussion](https://github.com/AreteDriver/Chefwise/discussions) (preferred)
-- Create an issue with `question` label
-- Check existing issues and docs first
+- **Questions**: Open an issue with the `question` label
+- **Bugs**: Open an issue with the `bug` label
+- **Feature Requests**: Open an issue with the `enhancement` label
+- **Discussions**: Use GitHub Discussions for general topics
 
-**Found a Bug?**
-- Check if it's already reported
-- Create a new issue with detailed steps to reproduce
-- Include environment details (browser, OS, etc.)
+## Code Review Process
 
-**Feature Requests?**
-- Open a Discussion to propose the idea
-- Explain the use case and benefits
-- Be open to feedback and alternatives
+1. Maintainers will review your PR within 2-3 business days
+2. Address any feedback or requested changes
+3. Once approved, your PR will be merged
+4. Your contribution will be credited in release notes
 
-## Questions?
+## License
 
-Feel free to open an issue for questions or discussions.
+By contributing to ChefWise, you agree that your contributions will be licensed under the MIT License.
 
-Thank you for contributing to ChefWise!
+---
+
+Thank you for contributing to ChefWise! 🎉

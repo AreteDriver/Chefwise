@@ -1,7 +1,34 @@
 {
   "name": "chefwise",
   "version": "1.0.0",
-  "description": "AI-driven cooking assistant for personalized recipes and meal planning",
+  "description": "AI-driven cooking assistant for personalized recipes, meal planning, and dietary coaching powered by OpenAI GPT-4",
+  "keywords": [
+    "ai",
+    "cooking-assistant",
+    "meal-planning",
+    "dietary-coaching",
+    "nutrient-analysis",
+    "recipe-generator",
+    "openai",
+    "nextjs",
+    "firebase",
+    "nutrition-tracking",
+    "meal-planner",
+    "cooking",
+    "recipes",
+    "diet",
+    "health"
+  ],
+  "author": "ChefWise Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AreteDriver/Chefwise.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AreteDriver/Chefwise/issues"
+  },
+  "homepage": "https://github.com/AreteDriver/Chefwise#readme",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
