@@ -20,7 +20,6 @@
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
-    "react-i18next": "^13.5.0",
     "stripe": "^14.7.0"
   },
   "devDependencies": {
