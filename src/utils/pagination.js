@@ -46,42 +46,61 @@ export const generatePageNumbers = (currentPage, totalPages, maxVisible = 7) => 
   }
 
   const pages = [];
-  const halfVisible = Math.floor(maxVisible / 2);
-  
+  const slotsForMiddle = maxVisible - 2; // Reserve slots for first and last page
+  let start = Math.max(2, currentPage - Math.floor(slotsForMiddle / 2));
+  let end = Math.min(totalPages - 1, currentPage + Math.floor(slotsForMiddle / 2));
+
+  // Adjust start and end if they go out of bounds
+  if (start < 2) {
+    end = end + (2 - start);
+    start = 2;
+  }
+  if (end > totalPages - 1) {
+    start = start - (end - (totalPages - 1));
+    end = totalPages - 1;
+    if (start < 2) start = 2;
+  }
+
   // Always show first page
   pages.push(1);
-  
-  // Calculate range around current page
-  let start = Math.max(2, currentPage - halfVisible);
-  let end = Math.min(totalPages - 1, currentPage + halfVisible);
-  
-  // Adjust if at the beginning or end
-  if (currentPage <= halfVisible) {
-    end = maxVisible - 1;
-  } else if (currentPage >= totalPages - halfVisible) {
-    start = totalPages - maxVisible + 2;
-  }
-  
+
   // Add ellipsis if needed
   if (start > 2) {
     pages.push('...');
   }
-  
+
   // Add middle pages
   for (let i = start; i <= end; i++) {
     pages.push(i);
   }
-  
+
   // Add ellipsis if needed
   if (end < totalPages - 1) {
     pages.push('...');
   }
-  
+
   // Always show last page
-  if (totalPages > 1) {
-    pages.push(totalPages);
+  pages.push(totalPages);
+
+  // If we have more than maxVisible items, remove from middle pages
+  while (pages.length > maxVisible) {
+    // Remove from the middle, prefer removing from start if possible
+    if (pages.includes('...')) {
+      // Remove an ellipsis if possible
+      const firstEllipsis = pages.indexOf('...');
+      const lastEllipsis = pages.lastIndexOf('...');
+      if (lastEllipsis !== firstEllipsis) {
+        // Remove the first ellipsis
+        pages.splice(firstEllipsis, 1);
+      } else {
+        // Remove the only ellipsis
+        pages.splice(firstEllipsis, 1);
+      }
+    } else {
+      // Remove from the middle pages
+      pages.splice(2, 1); // Remove after first page and possible ellipsis
+    }
   }
-  
   return pages;
 };
 
