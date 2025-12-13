@@ -374,10 +374,19 @@ ChefWise is fully responsive and works on:
 
 ### Prerequisites
 
-- Node.js 18+ 
-- Firebase account
-- OpenAI API key
-- Stripe account (for payments)
+#### For Developers:
+- **Node.js 18+** (LTS recommended) - [Download](https://nodejs.org/)
+- **npm** or **yarn** package manager
+- **Git** for version control
+- **Firebase account** - [Sign up](https://firebase.google.com/)
+- **OpenAI API key** - [Get API key](https://platform.openai.com/)
+- **Stripe account** (for payment integration) - [Sign up](https://stripe.com/)
+- Code editor (VS Code recommended)
+
+#### For Users:
+- Modern web browser (Chrome, Firefox, Safari, Edge)
+- Internet connection for AI features
+- (Optional) Firebase account for data sync across devices
 
 ### Installation
 

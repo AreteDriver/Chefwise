@@ -2,6 +2,16 @@
 
 Thank you for your interest in contributing to ChefWise! This document provides guidelines for contributing to the project.
 
+## Table of Contents
+- [Getting Started](#getting-started)
+- [Development Workflow](#development-workflow)
+- [Code Style](#code-style)
+- [Testing Guidelines](#testing-guidelines)
+- [Commit Messages](#commit-messages)
+- [Pull Request Guidelines](#pull-request-guidelines)
+- [Issue Labels](#issue-labels)
+- [Code Review Process](#code-review-process)
+
 ## Getting Started
 
 1. **Fork the repository**

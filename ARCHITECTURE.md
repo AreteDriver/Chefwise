@@ -74,6 +74,217 @@
 └──────────────┘    └──────────────┘      └──────────────┘
 ```
 
+## AI Workflows
+
+### AI Recipe Generation Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    AI Recipe Generation Flow                    │
+└─────────────────────────────────────────────────────────────────┘
+
+User Input
+  │
+  ├─ Ingredients: ["chicken", "broccoli", "garlic"]
+  ├─ Diet Type: "Mediterranean"
+  ├─ Preferences: { allergies: ["nuts"], servings: 4 }
+  └─ Macro Goals: { calories: 500, protein: 40g }
+  │
+  ▼
+┌──────────────────────────────────┐
+│  useOpenAI Hook (Frontend)       │
+│  - Validates input               │
+│  - Adds user context             │
+│  - Handles loading state         │
+└──────────────────────────────────┘
+  │
+  ▼
+┌──────────────────────────────────┐
+│  Firebase Cloud Function         │
+│  - Authentication check          │
+│  - Rate limit validation         │
+│  - Plan tier verification        │
+└──────────────────────────────────┘
+  │
+  ▼
+┌──────────────────────────────────┐
+│  Prompt Engineering              │
+│  - Build GPT-4 prompt            │
+│  - Include context & constraints │
+│  - Request JSON structure        │
+└──────────────────────────────────┘
+  │
+  │  Prompt Example:
+  │  "Generate a Mediterranean recipe using chicken, broccoli, and garlic.
+  │   Servings: 4. Target: 500 calories, 40g protein per serving.
+  │   Avoid nuts. Return JSON with: title, ingredients (with amounts),
+  │   steps, prep_time, cook_time, macros (protein, carbs, fat, calories)."
+  │
+  ▼
+┌──────────────────────────────────┐
+│  OpenAI API (GPT-4)              │
+│  - Process natural language      │
+│  - Generate structured recipe    │
+│  - Calculate nutrition           │
+└──────────────────────────────────┘
+  │
+  ▼
+┌──────────────────────────────────┐
+│  Response Processing             │
+│  - Parse JSON response           │
+│  - Validate structure            │
+│  - Error handling                │
+└──────────────────────────────────┘
+  │
+  ▼
+┌──────────────────────────────────┐
+│  Save to Firestore               │
+│  - Store in recipes collection   │
+│  - Link to user ID               │
+│  - Add timestamp & metadata      │
+└──────────────────────────────────┘
+  │
+  ▼
+┌──────────────────────────────────┐
+│  Return to Frontend              │
+│  - Update UI state               │
+│  - Render RecipeCard             │
+│  - Enable save/share options     │
+└──────────────────────────────────┘
+```
+
+### AI Meal Planning Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    AI Meal Planning Flow                        │
+└─────────────────────────────────────────────────────────────────┘
+
+User Configuration
+  │
+  ├─ Days: 7
+  ├─ Macro Goals: { protein: 150g, carbs: 200g, fat: 60g }
+  ├─ Pantry Items: ["chicken", "rice", "vegetables"]
+  └─ Preferences: { diet: "balanced", allergies: [] }
+  │
+  ▼
+┌──────────────────────────────────┐
+│  MealPlanner Component           │
+│  - Collect user inputs           │
+│  - Display calendar UI           │
+└──────────────────────────────────┘
+  │
+  ▼
+┌──────────────────────────────────┐
+│  generateMealPlan Function       │
+│  - Aggregate requirements        │
+│  - Calculate daily targets       │
+│  - Include variety constraints   │
+└──────────────────────────────────┘
+  │
+  ▼
+┌──────────────────────────────────┐
+│  Firebase Cloud Function         │
+│  - Check plan tier limits        │
+│  - Validate day count (free:3)   │
+└──────────────────────────────────┘
+  │
+  ▼
+┌──────────────────────────────────┐
+│  AI Prompt Construction          │
+│  - Build weekly plan prompt      │
+│  - Include macro distribution    │
+│  - Request structured output     │
+└──────────────────────────────────┘
+  │
+  │  Prompt Example:
+  │  "Create a 7-day meal plan with breakfast, lunch, dinner, snacks.
+  │   Daily targets: 150g protein, 200g carbs, 60g fat.
+  │   Prioritize: chicken, rice, vegetables.
+  │   Ensure variety and balanced nutrition.
+  │   Return JSON: { days: [{ date, meals: [...], totals: {...} }],
+  │   shoppingList: [...] }"
+  │
+  ▼
+┌──────────────────────────────────┐
+│  OpenAI API (GPT-4)              │
+│  - Generate full week plan       │
+│  - Balance macros across days    │
+│  - Create shopping list          │
+└──────────────────────────────────┘
+  │
+  ▼
+┌──────────────────────────────────┐
+│  Post-Processing                 │
+│  - Parse meal plan JSON          │
+│  - Validate macro totals         │
+│  - Generate shopping list        │
+│  - Calculate missing ingredients │
+└──────────────────────────────────┘
+  │
+  ▼
+┌──────────────────────────────────┐
+│  Save & Display                  │
+│  - Save plan to Firestore        │
+│  - Render calendar view          │
+│  - Display Chart.js graphs       │
+│  - Show shopping list            │
+└──────────────────────────────────┘
+```
+
+### Caching Strategy for AI Responses
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    AI Response Caching                          │
+└─────────────────────────────────────────────────────────────────┘
+
+Request
+  │
+  ▼
+┌──────────────────────────────────┐
+│  Generate Cache Key              │
+│  hash(ingredients + diet +       │
+│       preferences + constraints) │
+└──────────────────────────────────┘
+  │
+  ▼
+┌──────────────────────────────────┐
+│  Check Cache                     │
+│  1. IndexedDB (local)            │
+│  2. Firestore (user cache)       │
+│  3. Redis (server cache)         │
+└──────────────────────────────────┘
+  │
+  ├─ Cache Hit ──────────────┐
+  │                          │
+  │                          ▼
+  │                  ┌────────────────┐
+  │                  │ Return Cached  │
+  │                  │ Response       │
+  │                  └────────────────┘
+  │
+  └─ Cache Miss
+     │
+     ▼
+┌──────────────────────────────────┐
+│  Call OpenAI API                 │
+│  - Generate fresh response       │
+└──────────────────────────────────┘
+     │
+     ▼
+┌──────────────────────────────────┐
+│  Store in Cache                  │
+│  - TTL: 24 hours                 │
+│  - Indexed by cache key          │
+└──────────────────────────────────┘
+     │
+     ▼
+┌──────────────────────────────────┐
+│  Return Response                 │
+└──────────────────────────────────┘
+```
+
 ## Data Flow
 
 ### Recipe Generation Flow
