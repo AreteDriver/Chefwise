@@ -1,4 +1,4 @@
-# ChefWise — AI Cooking App
+# ChefWise — AI Workflow Enablement for Culinary Operations
 
 ChefWise is a serverless web application that combines OpenAI GPT-4 with Firebase to solve personalized nutrition tracking and meal planning challenges. Users can generate diet-specific recipes, manage pantry inventory with real-time sync, and plan meals with precise macronutrient targeting.
 
@@ -587,7 +587,7 @@ vercel deploy
 - `npm run lint` - Run ESLint
 - `npm run test` - Run tests (if configured)
 
-## CI/CD Pipeline
+## Automated CI/CD Pipeline
 
 ChefWise uses GitHub Actions for automated testing and deployment:
 
