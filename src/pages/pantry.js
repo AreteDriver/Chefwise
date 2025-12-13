@@ -1,4 +1,5 @@
 import { useRouter } from 'next/router';
+import TabLayout from '@/components/TabLayout';
 import PantryInventory from '@/components/PantryInventory';
 import MainLayout from '@/components/MainLayout';
 import useOpenAI from '@/hooks/useOpenAI';

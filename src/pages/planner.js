@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import TabLayout from '@/components/TabLayout';
 import MealPlanner from '@/components/MealPlanner';
 import MainLayout from '@/components/MainLayout';
 import useOpenAI from '@/hooks/useOpenAI';

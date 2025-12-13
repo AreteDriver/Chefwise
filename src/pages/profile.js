@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from '@/firebase/firebaseConfig';
+import { signOut } from 'firebase/auth';
+import { auth, db } from '@/firebase/firebaseConfig';
 import { DIET_FILTERS } from '@/prompts/recipePrompts';
 import MainLayout from '@/components/MainLayout';
 
@@ -45,6 +46,15 @@ export default function ProfilePage({ user }) {
       alert('Failed to update profile');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.push('/');
+    } catch (error) {
+      console.error('Sign out error:', error);
     }
   };
 
@@ -228,13 +238,23 @@ export default function ProfilePage({ user }) {
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:bg-gray-300"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
+            <div className="space-y-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:bg-gray-300"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
           </form>
         </div>
       </div>
