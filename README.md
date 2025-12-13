@@ -295,9 +295,13 @@ STRIPE_SECRET_KEY=your_stripe_secret
 ### Macro Calculation Logic
 ```javascript
 // macroCalculator.js
+const LBS_TO_KG = 0.453592;
+const PROTEIN_MULTIPLIER = 0.8; // grams per kg bodyweight
+
 calories = (protein_grams * 4) + (carbs_grams * 4) + (fat_grams * 9)
 macroPercentage = (nutrient_grams / total_grams) * 100
-targetProtein_grams = bodyWeight_kg * 0.8  // For pounds: (bodyWeight_lbs * 0.453592) * 0.8
+targetProtein_grams = bodyWeight_kg * PROTEIN_MULTIPLIER
+// For pounds: targetProtein_grams = (bodyWeight_lbs * LBS_TO_KG) * PROTEIN_MULTIPLIER
 ```
 
 ### Firestore Security Rules
