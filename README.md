@@ -407,7 +407,9 @@ cd functions && npm install && cd ..
 cp .env.example .env.local
 ```
 
-Edit `.env.local` and add your Firebase and OpenAI credentials.
+Edit `.env.local` and add your Firebase, OpenAI, and Stripe credentials.
+
+**Important**: For detailed Stripe setup and subscription configuration, see [SUBSCRIPTION_SETUP.md](SUBSCRIPTION_SETUP.md).
 
 4. Initialize Firebase:
 ```bash
