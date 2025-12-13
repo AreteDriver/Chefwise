@@ -56,7 +56,7 @@ export const trackPageView = (pageName, pageTitle) => {
   logEvent('page_view', {
     page_name: pageName,
     page_title: pageTitle,
-    page_location: window.location.href,
+    page_location: typeof window !== 'undefined' ? window.location.href : '',
   });
 };
 
