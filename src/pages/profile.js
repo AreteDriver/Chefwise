@@ -4,7 +4,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '@/firebase/firebaseConfig';
 import { DIET_FILTERS } from '@/prompts/recipePrompts';
-import TabLayout from '@/components/TabLayout';
+import MainLayout from '@/components/MainLayout';
 
 export default function ProfilePage({ user }) {
   const router = useRouter();
@@ -63,8 +63,8 @@ export default function ProfilePage({ user }) {
   }
 
   return (
-    <TabLayout user={user} activeTab="profile">
-      <div className="max-w-3xl mx-auto">
+    <MainLayout user={user} currentPage="profile">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-2xl font-bold mb-6">Profile Settings</h2>
 
@@ -217,15 +217,25 @@ export default function ProfilePage({ user }) {
               <p className="text-gray-600">
                 Current Plan: <span className="font-semibold capitalize">{profile?.planTier || 'free'}</span>
               </p>
-              {profile?.planTier !== 'premium' && (
-                <button
-                  type="button"
-                  onClick={() => router.push('/upgrade')}
-                  className="mt-3 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  Upgrade to Premium
-                </button>
-              )}
+              <div className="mt-3 flex gap-3">
+                {profile?.planTier !== 'premium' ? (
+                  <button
+                    type="button"
+                    onClick={() => router.push('/upgrade')}
+                    className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+                  >
+                    Upgrade to Premium
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => router.push('/subscription')}
+                    className="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                  >
+                    Manage Subscription
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="space-y-3">
@@ -248,6 +258,6 @@ export default function ProfilePage({ user }) {
           </form>
         </div>
       </div>
-    </TabLayout>
+    </MainLayout>
   );
 }
