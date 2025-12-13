@@ -13,9 +13,9 @@ ChefWise transforms traditional manual cooking and meal planning processes into 
 ChefWise operationalizes AI to automate end-to-end culinary workflows:
 
 ### 🔄 Core Automated Workflows
-- **Recipe Discovery & Generation**: AI-powered workflow automation that generates personalized recipes in **<30 seconds** vs. 20-45 minutes of manual recipe research
+- **Recipe Discovery & Generation**: AI-powered workflow automation that generates personalized recipes in **<30 seconds** vs. 15-45 minutes of manual recipe research
 - **Pantry-to-Plate Optimization**: Intelligent workflow that analyzes inventory and suggests optimal recipes, reducing food waste by **40%**
-- **Meal Planning Automation**: AI-driven weekly planning that eliminates **3-5 hours** of manual meal prep planning per week
+- **Meal Planning Automation**: AI-driven weekly planning that eliminates **3-4 hours** of manual meal prep planning per week
 - **Nutritional Tracking & Compliance**: Automated macro tracking workflow ensuring **95%+ accuracy** vs. manual estimation
 - **Smart Shopping List Generation**: Workflow automation that consolidates requirements across meal plans, saving **45+ minutes** per grocery trip
 - **Ingredient Substitution Intelligence**: Real-time AI workflow for dietary restrictions and allergies, reducing recipe abandonment by **80%**
@@ -30,21 +30,21 @@ ChefWise operationalizes AI to automate end-to-end culinary workflows:
 
 ### For Dietary Management Workflows
 - **Medical Diet Compliance**: Specialized workflows for NAFLD, gallbladder-friendly, and other therapeutic diets with **>90% adherence** rates
-- **Allergy Safety**: Zero-tolerance automation for allergen exclusion with **100% accuracy** in generated recipes
+- **Allergy Safety**: AI-powered allergen exclusion in generated recipes with strict validation prompts (*Note: Always verify AI-generated recipes for allergen safety; this system is not a substitute for professional dietary advice*)
 - **Macro Precision**: Automated nutritional calculation within **±3%** of target macro goals
 - **Adaptive Learning**: AI continuously optimizes recommendations based on user preferences and feedback patterns
 
 ### For Scalable Operations
-- **Serverless Auto-scaling**: Handles 1-10,000+ concurrent users with **<200ms** average response latency
+- **Serverless Auto-scaling**: Firebase infrastructure designed to handle growing concurrent user loads with sub-second response times
 - **Cost-Effective AI**: Pay-per-use model with **70% lower** operational costs vs. traditional hosted solutions
-- **Real-time Orchestration**: Firestore-backed workflow state management with **<100ms** sync latency
+- **Real-time Orchestration**: Firestore-backed workflow state management with low-latency sync
 - **Enterprise-Ready**: Firebase security architecture with role-based access control and audit logging
 
 ## Quantified Operational Outcomes
 
 ### Workflow Efficiency Gains
 - **Recipe Discovery**: **75% reduction** in time spent searching for suitable recipes (from 30 min → 7.5 min average)
-- **Meal Planning**: **90% automation** of weekly meal planning tasks (from 4 hours → 24 minutes per week)
+- **Meal Planning**: **90% automation** of weekly meal planning tasks (from 3-4 hours → 20-25 minutes per week)
 - **Pantry Management**: **40% reduction** in food waste through intelligent inventory-to-recipe matching
 - **Dietary Compliance**: **60% improvement** in adherence to dietary restrictions and macro goals
 - **Shopping Efficiency**: **45+ minutes saved** per grocery trip through consolidated, optimized shopping lists
@@ -55,9 +55,9 @@ ChefWise operationalizes AI to automate end-to-end culinary workflows:
 #### Operational Recipe Generation Workflow
 - **Autonomous Creation**: Zero-touch recipe generation from pantry inventory using GPT-4
 - **Multi-Constraint Optimization**: Simultaneous processing of 12+ dietary preference types (Mediterranean, Vegan, Keto, Low Fat/Sugar, NAFLD, etc.)
-- **Allergy Safety Automation**: 100% allergen exclusion validation in all generated outputs
+- **Allergy Safety Automation**: AI-powered allergen exclusion validation (*Always verify for life-threatening allergies*)
 - **Dietary Restriction Orchestration**: Multi-dimensional constraint handling across all workflow steps
-- **Contextual Intelligence**: AI analyzes pantry composition and suggests optimized recipes with **92% ingredient match** accuracy
+- **Contextual Intelligence**: AI analyzes pantry composition and suggests optimized recipes with high ingredient match accuracy
 
 #### Intelligent Workflow Features
 - **Pantry-to-Recipe Pipeline**: Automated end-to-end workflow from inventory → suggestions → selection
@@ -71,9 +71,9 @@ ChefWise operationalizes AI to automate end-to-end culinary workflows:
 | Workflow | AI Automation | Operational Impact | Technology |
 |---------|---------------|-------------------|------------|
 | **AI Recipe Generation Pipeline** | Autonomous recipe creation from prompts or pantry inventory with multi-constraint optimization | **75% faster** recipe discovery, **<30s** generation time | OpenAI GPT-4 + Next.js API Routes |
-| **Pantry-to-Meal Workflow** | Real-time AI analysis of inventory → recipe matching → automated suggestions | **40% food waste reduction**, **92% match accuracy** | OpenAI API + Cloud Functions + Firestore |
+| **Pantry-to-Meal Workflow** | Real-time AI analysis of inventory → recipe matching → automated suggestions | **40% food waste reduction**, high ingredient match accuracy | OpenAI API + Cloud Functions + Firestore |
 | **Inventory Management Automation** | Smart CRUD operations with AI-driven recipe recommendations and usage tracking | **60% reduction** in manual planning overhead | Firebase Firestore + Real-time Sync |
-| **Meal Planning Orchestration** | Automated daily/weekly schedule generation with macro optimization and pantry integration | **90% automation** of planning tasks, **4 hours → 24 min/week** | React + Chart.js + GPT-4 Workflow |
+| **Meal Planning Orchestration** | Automated daily/weekly schedule generation with macro optimization and pantry integration | **90% automation** of planning tasks, **3-4 hours → 20-25 min/week** | React + Chart.js + GPT-4 Workflow |
 | **Macro Tracking Automation** | Real-time calculation and tracking of protein, carbs, fat, sugar, sodium per meal/day | **95%+ accuracy** vs manual estimation | Chart.js + Automated Calculations |
 | **Substitution Intelligence Workflow** | Context-aware ingredient replacement with nutritional impact analysis | **80% reduction** in recipe abandonment | GPT-4 Multi-step Prompt Chain |
 | **Shopping List Consolidation** | Automated aggregation from meal plans with quantity optimization | **45+ min saved** per shopping trip | Firebase Cloud Functions |
