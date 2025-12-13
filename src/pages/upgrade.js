@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { loadStripe } from '@stripe/stripe-js';
-import { useSubscription } from '@/contexts/SubscriptionContext';
-import { trackUpgradeClick } from '@/utils/analytics';
-import { SUBSCRIPTION_PLANS, PLAN_FEATURES } from '@/utils/subscriptionConstants';
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+import MainLayout from '@/components/MainLayout';
 
 export default function UpgradePage({ user }) {
   const router = useRouter();
@@ -84,27 +79,8 @@ export default function UpgradePage({ user }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm mb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <button
-              onClick={() => router.push('/')}
-              className="text-2xl font-bold text-primary"
-            >
-              ChefWise
-            </button>
-            <button
-              onClick={() => router.push('/')}
-              className="text-gray-700 hover:text-primary"
-            >
-              ← Back to Home
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <MainLayout user={user} currentPage="upgrade">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Choose Your Plan
@@ -193,7 +169,7 @@ export default function UpgradePage({ user }) {
             Cancel anytime. No hidden fees. 30-day money-back guarantee.
           </p>
         </div>
-      </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 }
