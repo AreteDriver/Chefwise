@@ -184,7 +184,11 @@ export class ErrorBoundary extends React.Component {
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <h2>Oops! Something went wrong.</h2>
           <p>We've been notified and are working on a fix.</p>
-          <button onClick={() => window.location.reload()}>
+          <button onClick={() => {
+            if (typeof window !== 'undefined') {
+              window.location.reload();
+            }
+          }}>
             Reload Page
           </button>
         </div>
