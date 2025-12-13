@@ -144,8 +144,11 @@ service cloud.firestore {
     }
     
     match /recipes/{recipeId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Only allow the owner to read their own recipe
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Only allow the owner to create/update their own recipe
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
   }
 }
