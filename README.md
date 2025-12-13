@@ -146,6 +146,16 @@ Output: {
 
 ```
 chefwise/
+ ├─ mobile/                   # Flutter mobile app (NEW)
+ │   ├─ lib/
+ │   │   ├─ models/           # Data models
+ │   │   ├─ screens/          # UI screens
+ │   │   ├─ services/         # State management
+ │   │   ├─ theme/            # Design system
+ │   │   └─ main.dart         # App entry
+ │   ├─ assets/               # Images and icons
+ │   ├─ pubspec.yaml          # Flutter dependencies
+ │   └─ README.md             # Mobile app docs
  ├─ src/
  │   ├─ components/          # React components
  │   │   ├─ RecipeCard.jsx
