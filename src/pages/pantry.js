@@ -1,5 +1,7 @@
 import { useRouter } from 'next/router';
+import TabLayout from '@/components/TabLayout';
 import PantryInventory from '@/components/PantryInventory';
+import MainLayout from '@/components/MainLayout';
 import useOpenAI from '@/hooks/useOpenAI';
 
 export default function PantryPage({ user }) {
@@ -26,11 +28,13 @@ export default function PantryPage({ user }) {
   };
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <PantryInventory
-        userId={user.uid}
-        onSuggestRecipes={handleSuggestRecipes}
-      />
-    </main>
+    <MainLayout user={user} currentPage="pantry">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <PantryInventory
+          userId={user.uid}
+          onSuggestRecipes={handleSuggestRecipes}
+        />
+      </div>
+    </MainLayout>
   );
 }

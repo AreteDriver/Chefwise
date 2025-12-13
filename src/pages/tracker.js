@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import TabLayout from '@/components/TabLayout';
 import MacroTracker from '@/components/MacroTracker';
+import MainLayout from '@/components/MainLayout';
 
 export default function TrackerPage({ user }) {
   const router = useRouter();
@@ -30,11 +32,13 @@ export default function TrackerPage({ user }) {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <MacroTracker
-        dailyMacros={dailyMacros}
-        macroGoals={macroGoals}
-      />
-    </main>
+    <MainLayout user={user} currentPage="tracker">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <MacroTracker
+          dailyMacros={dailyMacros}
+          macroGoals={macroGoals}
+        />
+      </div>
+    </MainLayout>
   );
 }
