@@ -3,7 +3,6 @@
  * Enables caching of static assets and API responses for offline functionality
  */
 
-const CACHE_NAME = 'chefwise-v1';
 const STATIC_CACHE = 'chefwise-static-v1';
 const API_CACHE = 'chefwise-api-v1';
 
