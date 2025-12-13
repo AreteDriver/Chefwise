@@ -175,7 +175,7 @@ const HomeTab = ({ user }) => {
       <div className="bg-white rounded-2xl p-6 shadow-md border-2 border-primary/20">
         <div className="flex items-start gap-4 mb-4">
           <div className="bg-primary/10 rounded-full p-3 flex-shrink-0">
-            <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
           </div>
