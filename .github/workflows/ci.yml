@@ -70,5 +70,8 @@ jobs:
     
     - name: Check for accessibility issues
       run: |
-        echo "Accessibility checks would run here"
-        echo "Consider using tools like axe-core or pa11y"
+        npm install -g pa11y-ci
+        npm run build
+        npm start &
+        sleep 5
+        pa11y-ci --sitemap http://localhost:3000/sitemap.xml
