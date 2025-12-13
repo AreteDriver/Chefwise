@@ -19,7 +19,7 @@ Traditional recipe apps provide static content without personalization. ChefWise
 
 ### API & Cost Management
 - **OpenAI Rate Limits**: Freemium model enforces 2 recipes/day for free tier via Firestore usage tracking
-- **GPT-4 Token Optimization**: Structured JSON prompts with strict schema enforcement reduce token usage by ~30%
+- **GPT-4 Token Optimization**: Structured JSON prompts with response format enforcement (`response_format: { type: 'json_object' }`) reduce prompt verbosity and parsing overhead
 - **Firebase Quotas**: Cloud Functions implement authentication checks and plan tier validation on every invocation
 - **Real-time Sync**: Firestore listeners auto-update UI without polling, reducing read operations
 
@@ -92,26 +92,59 @@ ChefWise implements a serverless architecture using Firebase Cloud Functions to 
 
 **generateRecipe**
 ```javascript
-Input: { dietType, ingredients[], preferences: { allergies[], servings, cookTime } }
+Input: { 
+  dietType: string,
+  ingredients: array of strings,
+  preferences: {
+    allergies: array of strings,
+    servings: number,
+    cookTime: number (minutes)
+  }
+}
 Process: 
   1. Verify authentication (context.auth)
   2. Check plan tier and daily usage
   3. Construct GPT-4 prompt with diet filters
   4. Parse JSON response with macro calculations
   5. Save to Firestore recipes/{recipeId}
-Output: { title, ingredients[], steps[], macros{}, prepTime, cookTime }
+Output: { 
+  title: string,
+  ingredients: array of objects,
+  steps: array of strings,
+  macros: object,
+  prepTime: number,
+  cookTime: number
+}
 ```
 
 **getPantrySuggestions** (future implementation)
 ```javascript
-Input: { pantryItems[], preferences: { dietType, allergies[] } }
-Output: [{ recipe, matchPercentage, missingIngredients[] }]
+Input: {
+  pantryItems: array of strings,
+  preferences: {
+    dietType: string,
+    allergies: array of strings
+  }
+}
+Output: array of {
+  recipe: object,
+  matchPercentage: number,
+  missingIngredients: array of strings
+}
 ```
 
 **generateMealPlan**
 ```javascript
-Input: { days, macroGoals{}, pantryItems[], preferences{} }
-Output: { days[{ breakfast, lunch, dinner, macros }], shoppingList[] }
+Input: {
+  days: number,
+  macroGoals: object,
+  pantryItems: array of strings,
+  preferences: object
+}
+Output: {
+  days: array of objects (breakfast, lunch, dinner, macros),
+  shoppingList: array of strings
+}
 ```
 
 ## Folder Structure
@@ -262,9 +295,9 @@ STRIPE_SECRET_KEY=your_stripe_secret
 ### Macro Calculation Logic
 ```javascript
 // macroCalculator.js
-calories = (protein * 4) + (carbs * 4) + (fat * 9)
-macroPercentage = (nutrient / total) * 100
-targetProtein = bodyWeight * 0.8 // grams per kg
+calories = (protein_grams * 4) + (carbs_grams * 4) + (fat_grams * 9)
+macroPercentage = (nutrient_grams / total_grams) * 100
+targetProtein_grams = bodyWeight_kg * 0.8  // For pounds: (bodyWeight_lbs * 0.453592) * 0.8
 ```
 
 ### Firestore Security Rules
@@ -376,7 +409,7 @@ FIREBASE_SERVICE_ACCOUNT (JSON for deployment)
 ## Performance & Impact
 
 ### Technical Achievements
-- **~2,789 lines** of production code (components, pages, functions, utilities)
+- **2,789 lines** of production code (as of Dec 2025: components, pages, functions, utilities)
 - **3 Cloud Functions** processing authenticated API requests
 - **5 React components** with real-time Firestore sync
 - **8 Next.js pages** with SSR optimization
@@ -385,7 +418,7 @@ FIREBASE_SERVICE_ACCOUNT (JSON for deployment)
 
 ### Operational Metrics
 - **Freemium Conversion**: 2 free recipes/day creates upgrade incentive
-- **Token Efficiency**: JSON schema enforcement reduces GPT-4 costs by ~30% vs freeform
+- **Token Efficiency**: JSON schema enforcement via `response_format` parameter eliminates need for parsing instructions in prompt text
 - **Real-time Sync**: Optimistic updates + Firestore listeners eliminate polling overhead
 - **Scalability**: Serverless architecture auto-scales to thousands of concurrent users
 - **Build Time**: ~45 seconds for Next.js production build
