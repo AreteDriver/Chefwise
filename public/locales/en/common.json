@@ -1,0 +1,110 @@
+{
+  "common": {
+    "app_name": "ChefWise",
+    "welcome": "Welcome to ChefWise",
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "clear": "Clear"
+  },
+  "navigation": {
+    "home": "Home",
+    "pantry": "Pantry",
+    "planner": "Meal Planner",
+    "tracker": "Macro Tracker",
+    "profile": "Profile",
+    "upgrade": "Upgrade"
+  },
+  "recipe": {
+    "generate": "Generate Recipe",
+    "title": "Recipe",
+    "ingredients": "Ingredients",
+    "instructions": "Instructions",
+    "prep_time": "Prep Time",
+    "cook_time": "Cook Time",
+    "servings": "Servings",
+    "calories": "Calories",
+    "save_recipe": "Save Recipe",
+    "no_recipes": "No recipes found",
+    "enter_ingredients": "Enter ingredients or recipe idea",
+    "diet_preferences": "Diet Preferences",
+    "generate_from_pantry": "Generate from Pantry"
+  },
+  "pantry": {
+    "title": "Pantry Inventory",
+    "add_item": "Add Item",
+    "item_name": "Item Name",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "category": "Category",
+    "no_items": "No items in pantry",
+    "suggest_recipes": "Suggest Recipes"
+  },
+  "meal_planner": {
+    "title": "Meal Planner",
+    "days": "Days",
+    "macro_goals": "Macro Goals",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fat": "Fat",
+    "generate_plan": "Generate Plan",
+    "shopping_list": "Shopping List",
+    "breakfast": "Breakfast",
+    "lunch": "Lunch",
+    "dinner": "Dinner",
+    "snacks": "Snacks"
+  },
+  "macro_tracker": {
+    "title": "Macro Tracker",
+    "daily_totals": "Daily Totals",
+    "target": "Target",
+    "remaining": "Remaining",
+    "log_meal": "Log Meal",
+    "calories": "Calories",
+    "protein": "Protein (g)",
+    "carbs": "Carbs (g)",
+    "fat": "Fat (g)",
+    "fiber": "Fiber (g)",
+    "sugar": "Sugar (g)",
+    "sodium": "Sodium (mg)"
+  },
+  "auth": {
+    "sign_in": "Sign In",
+    "sign_out": "Sign Out",
+    "sign_up": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "forgot_password": "Forgot Password?",
+    "google_sign_in": "Sign in with Google"
+  },
+  "subscription": {
+    "free_plan": "Free Plan",
+    "premium_plan": "Premium Plan",
+    "upgrade_now": "Upgrade Now",
+    "daily_limit": "Daily recipe limit",
+    "unlimited_recipes": "Unlimited recipes",
+    "all_features": "All features unlocked"
+  },
+  "errors": {
+    "something_went_wrong": "Something went wrong",
+    "try_again": "Please try again",
+    "network_error": "Network error. Check your connection.",
+    "invalid_input": "Invalid input",
+    "not_found": "Not found",
+    "unauthorized": "Unauthorized access"
+  },
+  "accessibility": {
+    "menu": "Menu",
+    "close_menu": "Close menu",
+    "skip_to_content": "Skip to main content",
+    "loading_message": "Content is loading",
+    "search_recipes": "Search recipes",
+    "filter_recipes": "Filter recipes by diet"
+  }
+}

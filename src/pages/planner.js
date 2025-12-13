@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import TabLayout from '@/components/TabLayout';
 import MealPlanner from '@/components/MealPlanner';
+import MainLayout from '@/components/MainLayout';
 import useOpenAI from '@/hooks/useOpenAI';
+import { trackFeatureUsage } from '@/utils/analytics';
 
 export default function PlannerPage({ user }) {
   const router = useRouter();
+  const subscription = useSubscription();
   const [mealPlan, setMealPlan] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [macroGoals, setMacroGoals] = useState({
@@ -21,8 +25,18 @@ export default function PlannerPage({ user }) {
     return null;
   }
 
+  const maxDays = PLAN_LIMITS[subscription.planTier]?.mealPlanDays || 3;
+
   const handleGeneratePlan = async () => {
+    // Check if exceeding plan limits
+    if (days > maxDays) {
+      alert(`Your plan allows up to ${maxDays}-day meal plans. Upgrade to Premium for longer plans.`);
+      return;
+    }
+
     try {
+      trackFeatureUsage('meal_plan_generation', subscription.planTier);
+      
       const plan = await generateMealPlan({
         days,
         macroGoals,
@@ -36,27 +50,8 @@ export default function PlannerPage({ user }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm mb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <button
-              onClick={() => router.push('/')}
-              className="text-2xl font-bold text-primary"
-            >
-              ChefWise
-            </button>
-            <button
-              onClick={() => router.push('/')}
-              className="text-gray-700 hover:text-primary"
-            >
-              ← Back to Home
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <MainLayout user={user} currentPage="planner">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {showForm && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h3 className="text-xl font-semibold mb-4">Meal Plan Settings</h3>
@@ -65,6 +60,9 @@ export default function PlannerPage({ user }) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Number of Days
+                  {days > maxDays && (
+                    <PremiumBadge className="ml-2" />
+                  )}
                 </label>
                 <input
                   type="number"
@@ -74,6 +72,14 @@ export default function PlannerPage({ user }) {
                   onChange={(e) => setDays(parseInt(e.target.value))}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
+                <p className="text-sm text-gray-500 mt-1">
+                  Your plan allows up to {maxDays} days
+                  {days > maxDays && (
+                    <span className="text-primary font-medium">
+                      {' '}(Upgrade for longer plans)
+                    </span>
+                  )}
+                </p>
               </div>
 
               <div>
@@ -147,7 +153,7 @@ export default function PlannerPage({ user }) {
           mealPlan={mealPlan}
           onGeneratePlan={() => setShowForm(true)}
         />
-      </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

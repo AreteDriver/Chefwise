@@ -1,13 +1,15 @@
-# Python
-__pycache__/
-*.py[cod]
-.venv/
-
-# Node
+# Dependencies
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Testing
+coverage/
+*.lcov
+.nyc_output
 
 # Next.js
 .next/
@@ -15,39 +17,52 @@ out/
 build/
 dist/
 
+# Production
+*.tsbuildinfo
+next-env.d.ts
+
 # Environment
 .env
 .env.local
-.env.*.local
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-.DS_Store
+*.sublime-workspace
+*.sublime-project
 
 # Firebase
 .firebase/
 firebase-debug.log
 firestore-debug.log
+ui-debug.log
+
+# Vercel
+.vercel
 
 # Misc
 *.log
 .cache/
+*.tmp
+.temp/
 
-# Flutter/Dart
-mobile/.dart_tool/
-mobile/.flutter-plugins
-mobile/.flutter-plugins-dependencies
-mobile/.packages
-mobile/build/
-mobile/ios/Flutter/flutter_export_environment.sh
-mobile/ios/Flutter/Generated.xcconfig
-mobile/ios/Pods/
-mobile/ios/.symlinks/
-mobile/android/.gradle/
-mobile/android/app/build/
-mobile/android/gradle/
-mobile/android/local.properties
-mobile/pubspec.lock
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Python (if used for scripts)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
