@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import TabLayout from '@/components/TabLayout';
 import MacroTracker from '@/components/MacroTracker';
 import MainLayout from '@/components/MainLayout';
 

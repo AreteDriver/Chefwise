@@ -1,8 +1,18 @@
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import MainLayout from '@/components/MainLayout';
 
 export default function UpgradePage({ user }) {
   const router = useRouter();
+  const subscription = useSubscription();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/');
+    }
+  }, [user, router]);
 
   if (!user) {
     router.push('/');
@@ -11,45 +21,61 @@ export default function UpgradePage({ user }) {
 
   const plans = [
     {
-      name: 'Free',
-      price: '$0',
-      period: 'forever',
-      features: [
-        '2 AI recipes per day',
-        '1 diet filter',
-        '3-day meal plans',
-        '20 pantry items',
-        '10 saved recipes',
-        'Basic nutrition tracking',
-      ],
+      ...SUBSCRIPTION_PLANS.FREE,
+      features: PLAN_FEATURES.FREE,
       cta: 'Current Plan',
-      current: true,
+      current: !subscription.isPremium,
     },
     {
-      name: 'Premium',
-      price: '$9',
-      period: '/month',
-      features: [
-        'Unlimited AI recipes',
-        'All diet filters',
-        '30-day meal plans',
-        'Unlimited pantry items',
-        'Unlimited saved recipes',
-        'Advanced macro tracking',
-        'Shopping list export',
-        'Priority support',
-        'No ads',
-      ],
-      cta: 'Upgrade Now',
+      ...SUBSCRIPTION_PLANS.PREMIUM,
+      features: PLAN_FEATURES.PREMIUM,
+      cta: subscription.isPremium ? 'Current Plan' : 'Upgrade Now',
       highlighted: true,
+      current: subscription.isPremium,
     },
   ];
 
-  const handleUpgrade = (plan) => {
-    if (plan.current) return;
+  const handleUpgrade = async (plan) => {
+    if (plan.current || loading) return;
     
-    // TODO: Integrate Stripe payment
-    alert(`Upgrade to ${plan.name} - Payment integration coming soon!`);
+    // Track upgrade click
+    trackUpgradeClick(plan.name, plan.price.toString());
+    
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Create checkout session
+      const response = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.uid,
+          userEmail: user.email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      // Redirect to Stripe Checkout
+      const stripe = await stripePromise;
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: data.sessionId,
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setError(err.message || 'Failed to start checkout process');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -63,6 +89,13 @@ export default function UpgradePage({ user }) {
             Unlock the full power of AI-driven cooking
           </p>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="max-w-md mx-auto mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-800 text-center">{error}</p>
+          </div>
+        )}
 
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {plans.map((plan) => (
@@ -84,7 +117,7 @@ export default function UpgradePage({ user }) {
                 </h3>
                 <div className="mb-6">
                   <span className="text-4xl font-bold text-gray-900">
-                    {plan.price}
+                    {plan.displayPrice}
                   </span>
                   <span className="text-gray-600">{plan.period}</span>
                 </div>
@@ -112,16 +145,16 @@ export default function UpgradePage({ user }) {
 
                 <button
                   onClick={() => handleUpgrade(plan)}
-                  disabled={plan.current}
+                  disabled={plan.current || loading}
                   className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors ${
                     plan.current
                       ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                       : plan.highlighted
-                      ? 'bg-primary text-white hover:bg-primary/90'
+                      ? 'bg-primary text-white hover:bg-primary/90 disabled:opacity-50'
                       : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                   }`}
                 >
-                  {plan.cta}
+                  {loading && !plan.current ? 'Processing...' : plan.cta}
                 </button>
               </div>
             </div>

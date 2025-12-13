@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase/firebaseConfig';
+import { generateCacheKey, getCache } from '../utils/cache/aiCache';
 
 /**
  * Custom hook for OpenAI API interactions with rate limiting and error handling
@@ -23,8 +24,33 @@ export const useOpenAI = () => {
     setError(null);
     
     try {
+      // Check cache first (unless explicitly disabled)
+      const useCache = params.useCache !== false;
+      if (useCache) {
+        const cache = getCache();
+        const cacheKey = generateCacheKey({ type: 'recipe', ...params });
+        const cached = await cache.get(cacheKey);
+        
+        if (cached) {
+          setResult(cached);
+          setLoading(false);
+          return cached;
+        }
+      }
+
+      // Call API if not cached
       const generateRecipeFunction = httpsCallable(functions, 'generateRecipe');
       const response = await generateRecipeFunction(params);
+      
+      // Cache the response asynchronously (don't block on cache)
+      if (useCache && response.data) {
+        const cache = getCache();
+        const cacheKey = generateCacheKey({ type: 'recipe', ...params });
+        cache.set(cacheKey, response.data).catch(err => {
+          console.warn('Failed to cache recipe response:', err);
+        });
+      }
+      
       setResult(response.data);
       return response.data;
     } catch (err) {
@@ -47,8 +73,33 @@ export const useOpenAI = () => {
     setError(null);
     
     try {
+      // Check cache first (unless explicitly disabled)
+      const useCache = context.useCache !== false;
+      if (useCache) {
+        const cache = getCache();
+        const cacheKey = generateCacheKey({ type: 'substitution', ingredient, ...context });
+        const cached = await cache.get(cacheKey);
+        
+        if (cached) {
+          setResult(cached);
+          setLoading(false);
+          return cached;
+        }
+      }
+
+      // Call API if not cached
       const getSubstitutionsFunction = httpsCallable(functions, 'getSubstitutions');
       const response = await getSubstitutionsFunction({ ingredient, ...context });
+      
+      // Cache the response asynchronously (don't block on cache)
+      if (useCache && response.data) {
+        const cache = getCache();
+        const cacheKey = generateCacheKey({ type: 'substitution', ingredient, ...context });
+        cache.set(cacheKey, response.data).catch(err => {
+          console.warn('Failed to cache substitution response:', err);
+        });
+      }
+      
       setResult(response.data);
       return response.data;
     } catch (err) {
@@ -74,8 +125,33 @@ export const useOpenAI = () => {
     setError(null);
     
     try {
+      // Check cache first (unless explicitly disabled)
+      const useCache = params.useCache !== false;
+      if (useCache) {
+        const cache = getCache();
+        const cacheKey = generateCacheKey({ type: 'mealplan', ...params });
+        const cached = await cache.get(cacheKey);
+        
+        if (cached) {
+          setResult(cached);
+          setLoading(false);
+          return cached;
+        }
+      }
+
+      // Call API if not cached
       const generateMealPlanFunction = httpsCallable(functions, 'generateMealPlan');
       const response = await generateMealPlanFunction(params);
+      
+      // Cache the response asynchronously (don't block on cache)
+      if (useCache && response.data) {
+        const cache = getCache();
+        const cacheKey = generateCacheKey({ type: 'mealplan', ...params });
+        cache.set(cacheKey, response.data).catch(err => {
+          console.warn('Failed to cache meal plan response:', err);
+        });
+      }
+      
       setResult(response.data);
       return response.data;
     } catch (err) {
