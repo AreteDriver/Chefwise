@@ -37,7 +37,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@stripe/stripe-js": "^2.2.0",
+    "@stripe/stripe-js": "^8.6.0",
     "axios": "^1.6.0",
     "chart.js": "^4.4.0",
     "firebase": "^12.7.0",
