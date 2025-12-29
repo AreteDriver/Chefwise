@@ -51,6 +51,9 @@ ui-debug.log
 .cache/
 *.tmp
 .temp/
+*.backup
+*.backup2
+*.broken
 
 # OS
 .DS_Store
