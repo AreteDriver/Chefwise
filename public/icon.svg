@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="chef-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff9f43"/>
+      <stop offset="100%" style="stop-color:#ee5a24"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <circle cx="256" cy="256" r="240" fill="#fff5eb"/>
+  <!-- Chef hat -->
+  <ellipse cx="256" cy="140" rx="120" ry="60" fill="#fff"/>
+  <ellipse cx="180" cy="120" rx="50" ry="50" fill="#fff"/>
+  <ellipse cx="256" cy="100" rx="55" ry="55" fill="#fff"/>
+  <ellipse cx="332" cy="120" rx="50" ry="50" fill="#fff"/>
+  <rect x="150" y="140" width="212" height="60" fill="#fff"/>
+  <rect x="150" y="180" width="212" height="20" fill="#f0f0f0"/>
+  <!-- Plate -->
+  <ellipse cx="256" cy="360" rx="160" ry="40" fill="#e0e0e0"/>
+  <ellipse cx="256" cy="350" rx="140" ry="35" fill="#fff"/>
+  <!-- Food on plate -->
+  <ellipse cx="220" cy="320" rx="50" ry="30" fill="url(#chef-grad)"/>
+  <ellipse cx="290" cy="330" rx="40" ry="25" fill="#4ecdc4"/>
+  <ellipse cx="256" cy="300" rx="35" ry="20" fill="#ff6b6b"/>
+  <!-- Steam -->
+  <path d="M200 260 Q190 240 200 220" fill="none" stroke="#ccc" stroke-width="6" stroke-linecap="round"/>
+  <path d="M256 250 Q246 225 256 200" fill="none" stroke="#ccc" stroke-width="6" stroke-linecap="round"/>
+  <path d="M312 260 Q322 240 312 220" fill="none" stroke="#ccc" stroke-width="6" stroke-linecap="round"/>
+  <!-- Sparkle/AI indicator -->
+  <polygon points="400,100 410,130 440,130 415,150 425,180 400,160 375,180 385,150 360,130 390,130"
+           fill="#ffd700"/>
+</svg>
