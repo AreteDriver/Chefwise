@@ -1,0 +1,58 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    function isUnder5MB() {
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // Recipe images - user's private imported recipes
+    match /recipes/{userId}/imported/{fileName} {
+      // Users can read their own images
+      allow read: if isOwner(userId);
+
+      // Users can upload images (size and type restricted)
+      allow create: if isOwner(userId) && isImage() && isUnder5MB();
+
+      // Users can delete their own images
+      allow delete: if isOwner(userId);
+
+      // No updates - delete and re-upload instead
+      allow update: if false;
+    }
+
+    // Community recipe images - publicly readable
+    match /community/{recipeId}/{fileName} {
+      // Anyone can read community images
+      allow read: if true;
+
+      // Only Cloud Functions can write (via admin SDK)
+      // Regular users cannot write directly
+      allow write: if false;
+    }
+
+    // User profile photos
+    match /users/{userId}/profile/{fileName} {
+      // Profile photos are public
+      allow read: if true;
+
+      // Users can upload their own profile photo
+      allow create, update: if isOwner(userId) && isImage() && isUnder5MB();
+
+      // Users can delete their own profile photo
+      allow delete: if isOwner(userId);
+    }
+  }
+}

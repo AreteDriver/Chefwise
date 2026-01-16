@@ -37,5 +37,108 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
+
+    // ========================================
+    // COMMUNITY RECIPES
+    // ========================================
+
+    match /communityRecipes/{recipeId} {
+      // Anyone can read public recipes
+      allow read: if resource.data.visibility == 'public' ||
+                    (isAuthenticated() && resource.data.authorId == request.auth.uid);
+
+      // Only authenticated users can create
+      allow create: if isAuthenticated() &&
+                      request.resource.data.authorId == request.auth.uid &&
+                      validateRecipeData(request.resource.data);
+
+      // Only author can update/delete
+      allow update: if isAuthenticated() &&
+                      resource.data.authorId == request.auth.uid &&
+                      request.resource.data.authorId == request.auth.uid;
+      allow delete: if isAuthenticated() &&
+                      resource.data.authorId == request.auth.uid;
+    }
+
+    // ========================================
+    // RECIPE RATINGS
+    // ========================================
+
+    match /recipeRatings/{ratingId} {
+      // Anyone authenticated can read ratings
+      allow read: if isAuthenticated();
+
+      // Create: authenticated, own rating, valid rating value
+      allow create: if isAuthenticated() &&
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.rating >= 1 &&
+                      request.resource.data.rating <= 5;
+
+      // Update/delete: only own ratings
+      allow update, delete: if isAuthenticated() &&
+                              resource.data.userId == request.auth.uid;
+    }
+
+    // ========================================
+    // RECIPE SAVES (BOOKMARKS)
+    // ========================================
+
+    match /recipeSaves/{saveId} {
+      // Only owner can access their saves
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() &&
+                      request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+                              resource.data.userId == request.auth.uid;
+    }
+
+    // ========================================
+    // RECIPE COMMENTS
+    // ========================================
+
+    match /recipeComments/{commentId} {
+      // Anyone authenticated can read comments
+      allow read: if isAuthenticated();
+
+      // Create: authenticated, own comment, valid content
+      allow create: if isAuthenticated() &&
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.content.size() > 0 &&
+                      request.resource.data.content.size() <= 2000;
+
+      // Update/delete: only own comments
+      allow update, delete: if isAuthenticated() &&
+                              resource.data.userId == request.auth.uid;
+    }
+
+    // ========================================
+    // USER FOLLOWS
+    // ========================================
+
+    match /userFollows/{followId} {
+      // Anyone authenticated can read follows
+      allow read: if isAuthenticated();
+
+      // Create: authenticated, following as self, can't follow yourself
+      allow create: if isAuthenticated() &&
+                      request.resource.data.followerId == request.auth.uid &&
+                      request.resource.data.followerId != request.resource.data.followingId;
+
+      // Delete: only follower can unfollow
+      allow delete: if isAuthenticated() &&
+                      resource.data.followerId == request.auth.uid;
+    }
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    function validateRecipeData(data) {
+      return data.title.size() > 0 &&
+             data.title.size() <= 200 &&
+             data.ingredients.size() > 0 &&
+             data.steps.size() > 0 &&
+             data.visibility in ['public', 'private', 'unlisted'];
+    }
   }
 }
