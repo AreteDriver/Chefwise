@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, deleteDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
-import { db } from '../firebase/firebaseConfig';
+import {
+  subscribeToPantry,
+  addPantryItem,
+  deletePantryItem,
+  isPendingSync,
+  LOCAL_STATUS,
+} from '@/utils/offline/pantryService';
+import { useNetworkStatus } from '@/contexts/NetworkStatusContext';
 
 /**
- * PantryInventory Component - Manage user's pantry items
+ * PantryInventory Component - Manage user's pantry items with offline support
  * @param {Object} props
  * @param {string} props.userId - User ID
  * @param {Function} props.onSuggestRecipes - Callback to suggest recipes
@@ -12,19 +18,26 @@ export default function PantryInventory({ userId, onSuggestRecipes }) {
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState({ name: '', quantity: '', unit: '', category: '' });
   const [loading, setLoading] = useState(true);
+  const [isFromCache, setIsFromCache] = useState(false);
+  const { isOnline, incrementPendingCount } = useNetworkStatus();
 
   useEffect(() => {
-    if (!userId) return;
-
-    const q = query(collection(db, 'pantryItems'), where('userId', '==', userId));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const pantryItems = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setItems(pantryItems);
+    if (!userId) {
       setLoading(false);
-    });
+      return;
+    }
+
+    const unsubscribe = subscribeToPantry(
+      userId,
+      (pantryItems, fromCache) => {
+        setItems(pantryItems);
+        setIsFromCache(fromCache);
+        setLoading(false);
+      },
+      (online) => {
+        // Optional: Handle online status changes within the component
+      }
+    );
 
     return () => unsubscribe();
   }, [userId]);
@@ -34,12 +47,13 @@ export default function PantryInventory({ userId, onSuggestRecipes }) {
     if (!newItem.name.trim()) return;
 
     try {
-      await addDoc(collection(db, 'pantryItems'), {
-        ...newItem,
-        userId,
-        addedAt: new Date().toISOString(),
-      });
+      await addPantryItem(newItem, userId);
       setNewItem({ name: '', quantity: '', unit: '', category: '' });
+
+      // If offline, increment pending count
+      if (!isOnline) {
+        incrementPendingCount();
+      }
     } catch (error) {
       console.error('Error adding item:', error);
     }
@@ -47,7 +61,12 @@ export default function PantryInventory({ userId, onSuggestRecipes }) {
 
   const handleDeleteItem = async (itemId) => {
     try {
-      await deleteDoc(doc(db, 'pantryItems', itemId));
+      await deletePantryItem(itemId, userId);
+
+      // If offline and not a temp item, increment pending count
+      if (!isOnline && !itemId.startsWith('temp_')) {
+        incrementPendingCount();
+      }
     } catch (error) {
       console.error('Error deleting item:', error);
     }
@@ -58,7 +77,14 @@ export default function PantryInventory({ userId, onSuggestRecipes }) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2">Pantry Inventory</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold mb-2">Pantry Inventory</h2>
+          {isFromCache && (
+            <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
+              Cached data
+            </span>
+          )}
+        </div>
         <p className="text-gray-600">Manage your ingredients and get recipe suggestions</p>
       </div>
 
@@ -132,10 +158,23 @@ export default function PantryInventory({ userId, onSuggestRecipes }) {
             {items.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-primary transition-colors"
+                className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
+                  isPendingSync(item)
+                    ? 'border-amber-300 bg-amber-50'
+                    : 'border-gray-200 hover:border-primary'
+                }`}
               >
                 <div className="flex-1">
-                  <div className="font-medium">{item.name}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{item.name}</span>
+                    {isPendingSync(item) && (
+                      <span className="text-xs px-1.5 py-0.5 bg-amber-200 text-amber-800 rounded">
+                        {item.syncStatus === LOCAL_STATUS.PENDING_CREATE
+                          ? 'Pending sync'
+                          : 'Pending delete'}
+                      </span>
+                    )}
+                  </div>
                   <div className="text-sm text-gray-600">
                     {item.quantity && item.unit
                       ? `${item.quantity} ${item.unit}`

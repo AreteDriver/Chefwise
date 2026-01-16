@@ -1,6 +1,11 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
 
+// Polyfill structuredClone for fake-indexeddb tests
+if (typeof structuredClone === 'undefined') {
+  global.structuredClone = (obj) => JSON.parse(JSON.stringify(obj));
+}
+
 // Polyfill fetch for tests
 global.fetch = jest.fn(() =>
   Promise.resolve({
