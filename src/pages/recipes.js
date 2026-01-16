@@ -168,10 +168,7 @@ export default function RecipesPage({ user }) {
                 <div key={recipe.id} className="relative">
                   <RecipeCard
                     recipe={recipe}
-                    onClick={() => {
-                      // Could navigate to recipe detail page in the future
-                      console.log('Recipe clicked:', recipe.id);
-                    }}
+                    onClick={() => router.push(`/recipe/${recipe.id}`)}
                   />
                   {/* Delete button */}
                   <button

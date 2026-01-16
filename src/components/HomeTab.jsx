@@ -122,13 +122,39 @@ const HomeTab = ({ user }) => {
   };
 
   const handleSaveRecipe = async (recipe) => {
-    if (!user || recipeSaved) return;
+    if (!user || recipeSaved) return null;
 
     try {
-      await saveRecipe(user.uid, recipe);
+      const savedRecipe = await saveRecipe(user.uid, recipe);
       setRecipeSaved(true);
+      return savedRecipe;
     } catch (err) {
       console.error('Error saving recipe:', err);
+      return null;
+    }
+  };
+
+  const handleViewRecipe = async () => {
+    if (!result) return;
+
+    // If recipe already has an ID and is saved, navigate directly
+    if (result.id && recipeSaved) {
+      router.push(`/recipe/${result.id}`);
+      return;
+    }
+
+    // Save the recipe first to ensure it has an ID
+    if (!recipeSaved && user) {
+      const savedRecipe = await handleSaveRecipe(result);
+      if (savedRecipe) {
+        router.push(`/recipe/${savedRecipe.id}`);
+        return;
+      }
+    }
+
+    // Fallback: if recipe has an ID, try to navigate
+    if (result.id) {
+      router.push(`/recipe/${result.id}`);
     }
   };
 
@@ -275,7 +301,7 @@ const HomeTab = ({ user }) => {
           <RecipeCard
             recipe={result}
             onSave={recipeSaved ? null : handleSaveRecipe}
-            onClick={() => router.push(`/recipe/${result.id || 'preview'}`)}
+            onClick={handleViewRecipe}
           />
         </div>
       )}
