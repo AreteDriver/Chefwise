@@ -1,4 +1,5 @@
-const functions = require('firebase-functions');
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { onDocumentDeleted } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const OpenAI = require('openai');
 const fetch = require('node-fetch');
@@ -7,18 +8,15 @@ const cheerio = require('cheerio');
 admin.initializeApp();
 
 // Initialize OpenAI with error handling
+// In v2 Functions, use environment variables (set via Firebase CLI or .env files)
 let openai;
-try {
-  const apiKey = functions.config().openai?.key || process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    console.warn('OpenAI API key not configured. AI features will be disabled.');
-  } else {
-    openai = new OpenAI({
-      apiKey: apiKey,
-    });
-  }
-} catch (error) {
-  console.error('Failed to initialize OpenAI:', error);
+const apiKey = process.env.OPENAI_API_KEY;
+if (!apiKey) {
+  console.warn('OpenAI API key not configured. AI features will be disabled.');
+} else {
+  openai = new OpenAI({
+    apiKey: apiKey,
+  });
 }
 
 // Constants
@@ -32,9 +30,9 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif
  */
 async function checkPlanTier(userId, feature) {
   const userDoc = await admin.firestore().collection('users').doc(userId).get();
-  
+
   if (!userDoc.exists) {
-    throw new functions.https.HttpsError('not-found', 'User not found');
+    throw new HttpsError('not-found', 'User not found');
   }
 
   const userData = userDoc.data();
@@ -46,7 +44,7 @@ async function checkPlanTier(userId, feature) {
     const limit = planTier === 'free' ? 2 : Infinity;
 
     if (usageToday >= limit) {
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'permission-denied',
         'Daily limit reached. Upgrade to premium for unlimited recipes.'
       );
@@ -140,27 +138,29 @@ function parseAIResponse(responseText) {
 /**
  * Generate recipe using OpenAI with enhanced error handling
  */
-exports.generateRecipe = functions.https.onCall(async (data, context) => {
+exports.generateRecipe = onCall(async (request) => {
+  const { data, auth } = request;
+
   // Check authentication
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+  if (!auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   // Validate OpenAI availability
   if (!openai) {
-    throw new functions.https.HttpsError('unavailable', 'AI service is not configured');
+    throw new HttpsError('unavailable', 'AI service is not configured');
   }
 
-  const userId = context.auth.uid;
-  
+  const userId = auth.uid;
+
   // Check plan tier
   await checkPlanTier(userId, 'generateRecipe');
 
   // Validate input
   const { dietType, ingredients, preferences } = data;
-  
+
   if (!dietType || !ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
-    throw new functions.https.HttpsError('invalid-argument', 'dietType and ingredients array are required');
+    throw new HttpsError('invalid-argument', 'dietType and ingredients array are required');
   }
 
   try {
@@ -205,36 +205,38 @@ exports.generateRecipe = functions.https.onCall(async (data, context) => {
     };
   } catch (error) {
     console.error('Error generating recipe:', error);
-    
+
     // Provide more specific error messages
     if (error.code === 'insufficient_quota') {
-      throw new functions.https.HttpsError('resource-exhausted', 'AI service quota exceeded');
+      throw new HttpsError('resource-exhausted', 'AI service quota exceeded');
     } else if (error.code === 'model_not_found') {
-      throw new functions.https.HttpsError('unavailable', 'AI model not available');
+      throw new HttpsError('unavailable', 'AI model not available');
     } else if (error.message.includes('JSON')) {
-      throw new functions.https.HttpsError('internal', 'Failed to parse AI response');
+      throw new HttpsError('internal', 'Failed to parse AI response');
     }
-    
-    throw new functions.https.HttpsError('internal', 'Failed to generate recipe: ' + error.message);
+
+    throw new HttpsError('internal', 'Failed to generate recipe: ' + error.message);
   }
 });
 
 /**
  * Generate ingredient substitutions with enhanced error handling
  */
-exports.getSubstitutions = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+exports.getSubstitutions = onCall(async (request) => {
+  const { data, auth } = request;
+
+  if (!auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   if (!openai) {
-    throw new functions.https.HttpsError('unavailable', 'AI service is not configured');
+    throw new HttpsError('unavailable', 'AI service is not configured');
   }
 
   const { ingredient, dietType, reason, allergies } = data;
 
   if (!ingredient) {
-    throw new functions.https.HttpsError('invalid-argument', 'ingredient is required');
+    throw new HttpsError('invalid-argument', 'ingredient is required');
   }
 
   const prompt = `
@@ -276,37 +278,39 @@ Return ONLY a valid JSON array (no markdown, no extra text) with this exact stru
     return parseAIResponse(substitutionsText);
   } catch (error) {
     console.error('Error generating substitutions:', error);
-    
+
     if (error.code === 'insufficient_quota') {
-      throw new functions.https.HttpsError('resource-exhausted', 'AI service quota exceeded');
+      throw new HttpsError('resource-exhausted', 'AI service quota exceeded');
     }
-    
-    throw new functions.https.HttpsError('internal', 'Failed to generate substitutions: ' + error.message);
+
+    throw new HttpsError('internal', 'Failed to generate substitutions: ' + error.message);
   }
 });
 
 /**
  * Generate meal plan with enhanced pantry integration
  */
-exports.generateMealPlan = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+exports.generateMealPlan = onCall(async (request) => {
+  const { data, auth } = request;
+
+  if (!auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   if (!openai) {
-    throw new functions.https.HttpsError('unavailable', 'AI service is not configured');
+    throw new HttpsError('unavailable', 'AI service is not configured');
   }
 
-  const userId = context.auth.uid;
+  const userId = auth.uid;
   const { days, macroGoals, pantryItems, preferences } = data;
 
   // Validate input
   if (!days || !macroGoals) {
-    throw new functions.https.HttpsError('invalid-argument', 'days and macroGoals are required');
+    throw new HttpsError('invalid-argument', 'days and macroGoals are required');
   }
 
   if (days < 1 || days > MAX_MEAL_PLAN_DAYS) {
-    throw new functions.https.HttpsError('invalid-argument', `days must be between 1 and ${MAX_MEAL_PLAN_DAYS}`);
+    throw new HttpsError('invalid-argument', `days must be between 1 and ${MAX_MEAL_PLAN_DAYS}`);
   }
 
   const prompt = `
@@ -395,14 +399,14 @@ Return ONLY a valid JSON object (no markdown, no extra text) with this exact str
     };
   } catch (error) {
     console.error('Error generating meal plan:', error);
-    
+
     if (error.code === 'insufficient_quota') {
-      throw new functions.https.HttpsError('resource-exhausted', 'AI service quota exceeded');
+      throw new HttpsError('resource-exhausted', 'AI service quota exceeded');
     } else if (error.message.includes('JSON')) {
-      throw new functions.https.HttpsError('internal', 'Failed to parse AI response');
+      throw new HttpsError('internal', 'Failed to parse AI response');
     }
-    
-    throw new functions.https.HttpsError('internal', 'Failed to generate meal plan: ' + error.message);
+
+    throw new HttpsError('internal', 'Failed to generate meal plan: ' + error.message);
   }
 });
 
@@ -410,21 +414,23 @@ Return ONLY a valid JSON object (no markdown, no extra text) with this exact str
  * Get recipe suggestions based on pantry contents
  * This is an extensible feature for dynamic recipe creation
  */
-exports.getPantrySuggestions = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+exports.getPantrySuggestions = onCall(async (request) => {
+  const { data, auth } = request;
+
+  if (!auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   if (!openai) {
-    throw new functions.https.HttpsError('unavailable', 'AI service is not configured');
+    throw new HttpsError('unavailable', 'AI service is not configured');
   }
 
-  const userId = context.auth.uid;
+  const userId = auth.uid;
   const { pantryItems, preferences } = data;
 
   // Validate input
   if (!pantryItems || !Array.isArray(pantryItems) || pantryItems.length === 0) {
-    throw new functions.https.HttpsError('invalid-argument', 'pantryItems array is required');
+    throw new HttpsError('invalid-argument', 'pantryItems array is required');
   }
 
   const { dietType, allergies, restrictions, maxRecipes = DEFAULT_MAX_RECIPES } = preferences || {};
@@ -485,12 +491,12 @@ Return ONLY a valid JSON array (no markdown, no extra text) with this exact stru
     return suggestions;
   } catch (error) {
     console.error('Error getting pantry suggestions:', error);
-    
+
     if (error.code === 'insufficient_quota') {
-      throw new functions.https.HttpsError('resource-exhausted', 'AI service quota exceeded');
+      throw new HttpsError('resource-exhausted', 'AI service quota exceeded');
     }
-    
-    throw new functions.https.HttpsError('internal', 'Failed to get pantry suggestions: ' + error.message);
+
+    throw new HttpsError('internal', 'Failed to get pantry suggestions: ' + error.message);
   }
 });
 
@@ -499,30 +505,32 @@ Return ONLY a valid JSON array (no markdown, no extra text) with this exact stru
  * Fetches page content, extracts recipe data from JSON-LD or HTML,
  * and uses AI to structure/clean the data
  */
-exports.importRecipeFromUrl = functions.https.onCall(async (data, context) => {
+exports.importRecipeFromUrl = onCall(async (request) => {
+  const { data, auth } = request;
+
   // Check authentication
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+  if (!auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const userId = context.auth.uid;
+  const userId = auth.uid;
   const { url } = data;
 
   // Validate URL
   if (!url || typeof url !== 'string') {
-    throw new functions.https.HttpsError('invalid-argument', 'URL is required');
+    throw new HttpsError('invalid-argument', 'URL is required');
   }
 
   let parsedUrl;
   try {
     parsedUrl = new URL(url);
   } catch (e) {
-    throw new functions.https.HttpsError('invalid-argument', 'Invalid URL format');
+    throw new HttpsError('invalid-argument', 'Invalid URL format');
   }
 
   // Only allow HTTP/HTTPS
   if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-    throw new functions.https.HttpsError('invalid-argument', 'Only HTTP/HTTPS URLs are allowed');
+    throw new HttpsError('invalid-argument', 'Only HTTP/HTTPS URLs are allowed');
   }
 
   try {
@@ -536,7 +544,7 @@ exports.importRecipeFromUrl = functions.https.onCall(async (data, context) => {
     });
 
     if (!response.ok) {
-      throw new functions.https.HttpsError('unavailable', `Failed to fetch URL: ${response.status}`);
+      throw new HttpsError('unavailable', `Failed to fetch URL: ${response.status}`);
     }
 
     const html = await response.text();
@@ -556,14 +564,14 @@ exports.importRecipeFromUrl = functions.https.onCall(async (data, context) => {
     } else if (!recipeData) {
       // Last resort: use AI to extract from page text
       if (!openai) {
-        throw new functions.https.HttpsError('unavailable', 'Could not extract recipe and AI service is not available');
+        throw new HttpsError('unavailable', 'Could not extract recipe and AI service is not available');
       }
       recipeData = await aiExtractRecipe($, url);
     }
 
     // Validate we have minimum required fields
     if (!recipeData || !recipeData.title || !recipeData.ingredients || recipeData.ingredients.length === 0) {
-      throw new functions.https.HttpsError('not-found', 'Could not extract recipe from URL');
+      throw new HttpsError('not-found', 'Could not extract recipe from URL');
     }
 
     // Upload image to Firebase Storage if available
@@ -609,11 +617,11 @@ exports.importRecipeFromUrl = functions.https.onCall(async (data, context) => {
   } catch (error) {
     console.error('Error importing recipe from URL:', error);
 
-    if (error instanceof functions.https.HttpsError) {
+    if (error instanceof HttpsError) {
       throw error;
     }
 
-    throw new functions.https.HttpsError('internal', 'Failed to import recipe: ' + error.message);
+    throw new HttpsError('internal', 'Failed to import recipe: ' + error.message);
   }
 });
 
@@ -1101,37 +1109,35 @@ async function downloadAndUploadImage(imageUrl, userId, domain) {
  * Delete recipe image from Storage
  * Called when a recipe is deleted to clean up storage
  */
-exports.onRecipeDelete = functions.firestore
-  .document('recipes/{recipeId}')
-  .onDelete(async (snap, context) => {
-    const recipe = snap.data();
+exports.onRecipeDelete = onDocumentDeleted('recipes/{recipeId}', async (event) => {
+  const recipe = event.data?.data();
+  if (!recipe) return;
 
-    if (recipe.imageStoragePath) {
-      try {
-        const bucket = admin.storage().bucket();
-        await bucket.file(recipe.imageStoragePath).delete();
-        console.log(`Deleted image: ${recipe.imageStoragePath}`);
-      } catch (error) {
-        console.warn(`Failed to delete image ${recipe.imageStoragePath}:`, error.message);
-      }
+  if (recipe.imageStoragePath) {
+    try {
+      const bucket = admin.storage().bucket();
+      await bucket.file(recipe.imageStoragePath).delete();
+      console.log(`Deleted image: ${recipe.imageStoragePath}`);
+    } catch (error) {
+      console.warn(`Failed to delete image ${recipe.imageStoragePath}:`, error.message);
     }
-  });
+  }
+});
 
 /**
  * Also handle community recipe image cleanup
  */
-exports.onCommunityRecipeDelete = functions.firestore
-  .document('communityRecipes/{recipeId}')
-  .onDelete(async (snap, context) => {
-    const recipe = snap.data();
+exports.onCommunityRecipeDelete = onDocumentDeleted('communityRecipes/{recipeId}', async (event) => {
+  const recipe = event.data?.data();
+  if (!recipe) return;
 
-    if (recipe.imageStoragePath) {
-      try {
-        const bucket = admin.storage().bucket();
-        await bucket.file(recipe.imageStoragePath).delete();
-        console.log(`Deleted community image: ${recipe.imageStoragePath}`);
-      } catch (error) {
-        console.warn(`Failed to delete image ${recipe.imageStoragePath}:`, error.message);
-      }
+  if (recipe.imageStoragePath) {
+    try {
+      const bucket = admin.storage().bucket();
+      await bucket.file(recipe.imageStoragePath).delete();
+      console.log(`Deleted community image: ${recipe.imageStoragePath}`);
+    } catch (error) {
+      console.warn(`Failed to delete image ${recipe.imageStoragePath}:`, error.message);
     }
-  });
+  }
+});
