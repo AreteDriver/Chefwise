@@ -111,6 +111,37 @@ export const trackSubscription = (event, plan) => {
 };
 
 /**
+ * Track subscription page view
+ * @param {string} currentPlan - User's current plan
+ */
+export const trackSubscriptionView = (currentPlan) => {
+  logEvent('subscription_page_view', {
+    current_plan: currentPlan,
+  });
+};
+
+/**
+ * Track portal access
+ */
+export const trackPortalAccess = () => {
+  logEvent('portal_access');
+};
+
+/**
+ * Track successful subscription
+ * @param {string} planName - Plan name
+ * @param {string} price - Plan price
+ * @param {string} userId - User ID
+ */
+export const trackSubscriptionSuccess = (planName, price, userId) => {
+  logEvent('subscription_success', {
+    plan_name: planName,
+    price: price,
+    user_id: userId,
+  });
+};
+
+/**
  * Track search queries
  * @param {string} query - Search query
  * @param {number} resultCount - Number of results
@@ -209,6 +240,9 @@ const analyticsUtils = {
   trackPantryAction,
   trackRecipeSave,
   trackSubscription,
+  trackSubscriptionView,
+  trackPortalAccess,
+  trackSubscriptionSuccess,
   trackSearch,
   trackError,
   trackEngagement,
