@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import MealPlanner from '@/components/MealPlanner';
 import MainLayout from '@/components/MainLayout';
 import useOpenAI from '@/hooks/useOpenAI';
+import { useNetworkStatus } from '@/contexts/NetworkStatusContext';
 
 export default function PlannerPage({ user }) {
   const router = useRouter();
   const [mealPlan, setMealPlan] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [isFromCache, setIsFromCache] = useState(false);
   const [macroGoals, setMacroGoals] = useState({
     calories: 2000,
     protein: 150,
@@ -15,7 +17,22 @@ export default function PlannerPage({ user }) {
     fat: 65,
   });
   const [days, setDays] = useState(7);
-  const { generateMealPlan, loading } = useOpenAI();
+  const { generateMealPlan, loadCachedMealPlan, loading } = useOpenAI();
+  const { isOnline } = useNetworkStatus();
+  const cacheLoadedRef = useRef(false);
+
+  // Load cached meal plan on mount
+  useEffect(() => {
+    if (user && !cacheLoadedRef.current) {
+      cacheLoadedRef.current = true;
+      loadCachedMealPlan(user.uid).then((cached) => {
+        if (cached) {
+          setMealPlan(cached);
+          setIsFromCache(true);
+        }
+      });
+    }
+  }, [user, loadCachedMealPlan]);
 
   if (!user) {
     router.push('/');
@@ -30,13 +47,20 @@ export default function PlannerPage({ user }) {
       return;
     }
 
+    if (!isOnline) {
+      alert('You are offline. Please connect to the internet to generate a new meal plan.');
+      return;
+    }
+
     try {
       const plan = await generateMealPlan({
         days,
         macroGoals,
         preferences: {},
+        userId: user.uid,
       });
       setMealPlan(plan);
+      setIsFromCache(false);
       setShowForm(false);
     } catch (error) {
       console.error('Error generating meal plan:', error);
@@ -137,6 +161,17 @@ export default function PlannerPage({ user }) {
                 Cancel
               </button>
             </div>
+          </div>
+        )}
+
+        {isFromCache && mealPlan && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex items-center gap-2">
+            <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm text-blue-700">
+              Showing your saved meal plan. {isOnline ? 'Generate a new plan to update.' : 'Connect to the internet to generate a new plan.'}
+            </span>
           </div>
         )}
 

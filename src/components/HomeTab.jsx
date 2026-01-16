@@ -60,6 +60,7 @@ const HomeTab = ({ user }) => {
         dietType: 'general',
         ingredients,
         preferences: {},
+        userId: user.uid,
       });
     } catch (err) {
       console.error('Error generating recipe:', err);
@@ -106,6 +107,7 @@ const HomeTab = ({ user }) => {
         dietType,
         ingredients: [prompt],
         preferences: {},
+        userId: user.uid,
       });
     } catch (err) {
       console.error('Error generating recipe:', err);

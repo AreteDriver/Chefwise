@@ -5,6 +5,7 @@ import { auth } from '@/firebase/firebaseConfig';
 import { PageStateProvider } from '@/contexts/PageStateContext';
 import { NetworkStatusProvider } from '@/contexts/NetworkStatusContext';
 import UpdateAvailableToast from '@/components/UpdateAvailableToast';
+import InstallPromptBanner from '@/components/InstallPromptBanner';
 
 export default function App({ Component, pageProps }) {
   const [user, setUser] = useState(null);
@@ -49,6 +50,7 @@ export default function App({ Component, pageProps }) {
       <PageStateProvider>
         <Component {...pageProps} user={user} />
         <UpdateAvailableToast />
+        <InstallPromptBanner />
       </PageStateProvider>
     </NetworkStatusProvider>
   );

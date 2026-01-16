@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase/firebaseConfig';
 import { generateCacheKey, getCache } from '../utils/cache/aiCache';
+import { saveMealPlan, getLatestMealPlan } from '../utils/offline/mealPlanService';
+import { saveRecipe } from '../utils/offline/recipeService';
 
 /**
  * Custom hook for OpenAI API interactions with rate limiting and error handling
@@ -49,8 +51,15 @@ export const useOpenAI = () => {
         cache.set(cacheKey, response.data).catch(err => {
           console.warn('Failed to cache recipe response:', err);
         });
+
+        // Also save to offline IndexedDB for persistent access
+        if (params.userId) {
+          saveRecipe(params.userId, response.data).catch(err => {
+            console.warn('Failed to save recipe offline:', err);
+          });
+        }
       }
-      
+
       setResult(response.data);
       return response.data;
     } catch (err) {
@@ -150,8 +159,15 @@ export const useOpenAI = () => {
         cache.set(cacheKey, response.data).catch(err => {
           console.warn('Failed to cache meal plan response:', err);
         });
+
+        // Also save to offline IndexedDB for persistent access
+        if (params.userId) {
+          saveMealPlan(params.userId, response.data).catch(err => {
+            console.warn('Failed to save meal plan offline:', err);
+          });
+        }
       }
-      
+
       setResult(response.data);
       return response.data;
     } catch (err) {
@@ -189,6 +205,27 @@ export const useOpenAI = () => {
     }
   };
 
+  /**
+   * Load cached meal plan for offline viewing
+   * @param {string} userId - User ID
+   * @returns {Promise<Object|null>} Cached meal plan or null
+   */
+  const loadCachedMealPlan = async (userId) => {
+    if (!userId) return null;
+
+    try {
+      const cached = await getLatestMealPlan(userId);
+      if (cached) {
+        setResult(cached);
+        return cached;
+      }
+      return null;
+    } catch (err) {
+      console.warn('Failed to load cached meal plan:', err);
+      return null;
+    }
+  };
+
   return {
     loading,
     error,
@@ -197,6 +234,7 @@ export const useOpenAI = () => {
     generateSubstitutions,
     generateMealPlan,
     getPantrySuggestions,
+    loadCachedMealPlan,
   };
 };
 

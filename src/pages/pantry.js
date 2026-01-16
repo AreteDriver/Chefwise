@@ -20,6 +20,7 @@ export default function PantryPage({ user }) {
         dietType: 'general',
         ingredients,
         preferences: {},
+        userId: user.uid,
       });
       router.push('/');
     } catch (error) {
