@@ -18,6 +18,7 @@ export default function NavigationBar({ user, currentPage = '' }) {
 
   const navigation = [
     { name: 'Home', href: '/', current: currentPage === 'home' },
+    { name: 'Recipes', href: '/recipes', current: currentPage === 'recipes', requiresAuth: true },
     { name: 'Pantry', href: '/pantry', current: currentPage === 'pantry', requiresAuth: true },
     { name: 'Planner', href: '/planner', current: currentPage === 'planner', requiresAuth: true },
     { name: 'Tracker', href: '/tracker', current: currentPage === 'tracker', requiresAuth: true },

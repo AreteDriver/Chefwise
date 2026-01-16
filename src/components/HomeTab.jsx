@@ -4,6 +4,7 @@ import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import { db } from '@/firebase/firebaseConfig';
 import useOpenAI from '@/hooks/useOpenAI';
 import RecipeCard from './RecipeCard';
+import { saveRecipe } from '@/utils/offline/recipeService';
 
 const MAX_PANTRY_ITEMS_TO_LOAD = 10;
 const MAX_PANTRY_ITEMS_TO_DISPLAY = 5;
@@ -12,7 +13,13 @@ const HomeTab = ({ user }) => {
   const router = useRouter();
   const [pantryItems, setPantryItems] = useState([]);
   const [loadingPantry, setLoadingPantry] = useState(false);
+  const [recipeSaved, setRecipeSaved] = useState(false);
   const { loading, error, result, generateRecipe } = useOpenAI();
+
+  // Reset saved state when a new recipe is generated
+  useEffect(() => {
+    setRecipeSaved(false);
+  }, [result]);
 
   useEffect(() => {
     const loadPantryItems = async () => {
@@ -111,6 +118,17 @@ const HomeTab = ({ user }) => {
       });
     } catch (err) {
       console.error('Error generating recipe:', err);
+    }
+  };
+
+  const handleSaveRecipe = async (recipe) => {
+    if (!user || recipeSaved) return;
+
+    try {
+      await saveRecipe(user.uid, recipe);
+      setRecipeSaved(true);
+    } catch (err) {
+      console.error('Error saving recipe:', err);
     }
   };
 
@@ -243,10 +261,20 @@ const HomeTab = ({ user }) => {
       {/* Recipe Result */}
       {result && (
         <div>
-          <h3 className="text-xl font-bold mb-3 text-gray-900">Your Recipe</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xl font-bold text-gray-900">Your Recipe</h3>
+            {recipeSaved && (
+              <span className="text-sm text-green-600 flex items-center gap-1">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Saved to My Recipes
+              </span>
+            )}
+          </div>
           <RecipeCard
             recipe={result}
-            onSave={(recipe) => console.log('Save recipe:', recipe)}
+            onSave={recipeSaved ? null : handleSaveRecipe}
             onClick={() => router.push(`/recipe/${result.id || 'preview'}`)}
           />
         </div>
