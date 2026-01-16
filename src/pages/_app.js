@@ -12,12 +12,29 @@ export default function App({ Component, pageProps }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
+    let authUnsubscribe = null;
 
-    return () => unsubscribe();
+    // Set a timeout to ensure app doesn't hang if auth fails to initialize
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
+    try {
+      authUnsubscribe = onAuthStateChanged(auth, (user) => {
+        clearTimeout(timeout);
+        setUser(user);
+        setLoading(false);
+      });
+    } catch (error) {
+      console.error('Auth initialization error:', error);
+      clearTimeout(timeout);
+      setLoading(false);
+    }
+
+    return () => {
+      clearTimeout(timeout);
+      if (authUnsubscribe) authUnsubscribe();
+    };
   }, []);
 
   // Register service worker for PWA functionality
