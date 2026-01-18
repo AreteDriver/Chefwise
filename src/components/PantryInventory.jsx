@@ -19,7 +19,16 @@ export default function PantryInventory({ userId, onSuggestRecipes }) {
   const [newItem, setNewItem] = useState({ name: '', quantity: '', unit: '', category: '' });
   const [loading, setLoading] = useState(true);
   const [isFromCache, setIsFromCache] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const { isOnline, incrementPendingCount } = useNetworkStatus();
+
+  // Filter items based on search and category
+  const filteredItems = items.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = !categoryFilter || item.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
   useEffect(() => {
     if (!userId) {
@@ -134,6 +143,46 @@ export default function PantryInventory({ userId, onSuggestRecipes }) {
         </button>
       </form>
 
+      {/* Search and Filter */}
+      {items.length > 0 && (
+        <div className="mb-4 flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 relative">
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search pantry..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Items List */}
       {loading ? (
         <div className="text-center py-8 text-gray-500">Loading pantry...</div>
@@ -145,17 +194,32 @@ export default function PantryInventory({ userId, onSuggestRecipes }) {
       ) : (
         <>
           <div className="mb-4 flex justify-between items-center">
-            <p className="text-sm text-gray-600">{items.length} items in pantry</p>
+            <p className="text-sm text-gray-600">
+              {filteredItems.length === items.length
+                ? `${items.length} items in pantry`
+                : `${filteredItems.length} of ${items.length} items`}
+            </p>
             <button
-              onClick={() => onSuggestRecipes && onSuggestRecipes(items)}
+              onClick={() => onSuggestRecipes && onSuggestRecipes(filteredItems.length > 0 ? filteredItems : items)}
               className="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary/90 transition-colors text-sm"
             >
               Suggest Recipes
             </button>
           </div>
 
+          {filteredItems.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No items match your search</p>
+              <button
+                onClick={() => { setSearchQuery(''); setCategoryFilter(''); }}
+                className="mt-2 text-primary hover:text-primary/80 text-sm"
+              >
+                Clear filters
+              </button>
+            </div>
+          ) : (
           <div className="space-y-2">
-            {items.map((item) => (
+            {filteredItems.map((item) => (
               <div
                 key={item.id}
                 className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
@@ -208,6 +272,7 @@ export default function PantryInventory({ userId, onSuggestRecipes }) {
               </div>
             ))}
           </div>
+          )}
         </>
       )}
     </div>

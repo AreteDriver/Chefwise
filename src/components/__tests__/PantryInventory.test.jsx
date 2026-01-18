@@ -248,15 +248,17 @@ describe('PantryInventory', () => {
   });
 
   describe('Category dropdown', () => {
-    it('renders all category options', () => {
+    it('renders all category options in the add item form', () => {
       render(<PantryInventory userId="user123" />);
 
-      const select = screen.getByRole('combobox');
-      expect(select).toBeInTheDocument();
+      // There are multiple comboboxes - one in the add form, one for filtering
+      const selects = screen.getAllByRole('combobox');
+      expect(selects.length).toBeGreaterThanOrEqual(1);
 
       const categories = ['Protein', 'Vegetables', 'Fruits', 'Grains', 'Dairy', 'Spices', 'Other'];
       categories.forEach((cat) => {
-        expect(screen.getByRole('option', { name: cat })).toBeInTheDocument();
+        // Each category appears in at least the add form dropdown
+        expect(screen.getAllByRole('option', { name: cat }).length).toBeGreaterThanOrEqual(1);
       });
     });
   });

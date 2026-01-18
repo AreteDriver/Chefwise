@@ -24,7 +24,7 @@ export default function RecipeCard({ recipe, onSave, onClick }) {
 
   return (
     <div
-      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-200 cursor-pointer"
       onClick={onClick}
     >
       <div className="p-6">

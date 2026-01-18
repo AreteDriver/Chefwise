@@ -10,7 +10,7 @@ ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarEle
  * @param {Object} props.mealPlan - Meal plan data
  * @param {Function} props.onGeneratePlan - Generate plan callback
  */
-export default function MealPlanner({ mealPlan, onGeneratePlan }) {
+export default function MealPlanner({ mealPlan, onGeneratePlan, isGenerating = false }) {
   const [selectedDay, setSelectedDay] = useState(0);
 
   if (!mealPlan || !mealPlan.days || mealPlan.days.length === 0) {
@@ -22,9 +22,20 @@ export default function MealPlanner({ mealPlan, onGeneratePlan }) {
         </p>
         <button
           onClick={onGeneratePlan}
-          className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
+          disabled={isGenerating}
+          className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          Generate Meal Plan
+          {isGenerating ? (
+            <>
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Generating...
+            </>
+          ) : (
+            'Generate Meal Plan'
+          )}
         </button>
       </div>
     );
