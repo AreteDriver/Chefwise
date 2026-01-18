@@ -20,12 +20,13 @@ const customJestConfig = {
     '!src/pages/_document.js',
   ],
   testMatch: [
-    '**/__tests__/**/*.[jt]s?(x)',
-    '**/?(*.)+(spec|test).[jt]s?(x)',
+    '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
+    '<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)',
   ],
   testPathIgnorePatterns: [
-    '<rootDir>/node_modules/',
-    '<rootDir>/e2e/',
+    '/node_modules/',
+    '/e2e/',
+    '/.next/',
   ],
   coverageThreshold: {
     global: {
