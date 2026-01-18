@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 const DISMISSED_KEY = 'chefwise-install-dismissed';
 const DISMISS_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -87,10 +88,12 @@ export default function InstallPromptBanner() {
         {/* Header with gradient */}
         <div className="bg-gradient-to-r from-primary to-secondary px-4 py-3">
           <div className="flex items-center gap-3">
-            <img
+            <Image
               src="/icons/icon-72.png"
               alt="ChefWise"
-              className="w-10 h-10 rounded-lg"
+              width={40}
+              height={40}
+              className="rounded-lg"
             />
             <div className="text-white">
               <h4 className="font-semibold">Install ChefWise</h4>
