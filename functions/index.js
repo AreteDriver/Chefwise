@@ -7,16 +7,20 @@ const cheerio = require('cheerio');
 
 admin.initializeApp();
 
-// Initialize OpenAI with error handling
-// In v2 Functions, use environment variables (set via Firebase CLI or .env files)
-let openai;
+// Initialize OpenAI client using environment variable
+// Set OPENAI_API_KEY in functions/.env file for local dev
+// or via Firebase Functions environment configuration for production
+let openaiClient = null;
 const apiKey = process.env.OPENAI_API_KEY;
-if (!apiKey) {
-  console.warn('OpenAI API key not configured. AI features will be disabled.');
+if (apiKey) {
+  openaiClient = new OpenAI({ apiKey });
 } else {
-  openai = new OpenAI({
-    apiKey: apiKey,
-  });
+  console.warn('OpenAI API key not configured. AI features will be disabled.');
+}
+
+// Helper to get OpenAI client
+function getOpenAIClient() {
+  return openaiClient;
 }
 
 // Constants
@@ -138,7 +142,7 @@ function parseAIResponse(responseText) {
 /**
  * Generate recipe using OpenAI with enhanced error handling
  */
-exports.generateRecipe = onCall(async (request) => {
+exports.generateRecipe = onCall({ secrets: [openaiApiKey] }, async (request) => {
   const { data, auth } = request;
 
   // Check authentication
@@ -146,7 +150,8 @@ exports.generateRecipe = onCall(async (request) => {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  // Validate OpenAI availability
+  // Get OpenAI client (uses secret)
+  const openai = getOpenAIClient();
   if (!openai) {
     throw new HttpsError('unavailable', 'AI service is not configured');
   }
@@ -222,13 +227,14 @@ exports.generateRecipe = onCall(async (request) => {
 /**
  * Generate ingredient substitutions with enhanced error handling
  */
-exports.getSubstitutions = onCall(async (request) => {
+exports.getSubstitutions = onCall({ secrets: [openaiApiKey] }, async (request) => {
   const { data, auth } = request;
 
   if (!auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
+  const openai = getOpenAIClient();
   if (!openai) {
     throw new HttpsError('unavailable', 'AI service is not configured');
   }
@@ -290,13 +296,14 @@ Return ONLY a valid JSON array (no markdown, no extra text) with this exact stru
 /**
  * Generate meal plan with enhanced pantry integration
  */
-exports.generateMealPlan = onCall(async (request) => {
+exports.generateMealPlan = onCall({ secrets: [openaiApiKey] }, async (request) => {
   const { data, auth } = request;
 
   if (!auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
+  const openai = getOpenAIClient();
   if (!openai) {
     throw new HttpsError('unavailable', 'AI service is not configured');
   }
@@ -414,13 +421,14 @@ Return ONLY a valid JSON object (no markdown, no extra text) with this exact str
  * Get recipe suggestions based on pantry contents
  * This is an extensible feature for dynamic recipe creation
  */
-exports.getPantrySuggestions = onCall(async (request) => {
+exports.getPantrySuggestions = onCall({ secrets: [openaiApiKey] }, async (request) => {
   const { data, auth } = request;
 
   if (!auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
+  const openai = getOpenAIClient();
   if (!openai) {
     throw new HttpsError('unavailable', 'AI service is not configured');
   }
@@ -505,13 +513,16 @@ Return ONLY a valid JSON array (no markdown, no extra text) with this exact stru
  * Fetches page content, extracts recipe data from JSON-LD or HTML,
  * and uses AI to structure/clean the data
  */
-exports.importRecipeFromUrl = onCall(async (request) => {
+exports.importRecipeFromUrl = onCall({ secrets: [openaiApiKey] }, async (request) => {
   const { data, auth } = request;
 
   // Check authentication
   if (!auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
+
+  // Get OpenAI client (may be null if not configured)
+  const openai = getOpenAIClient();
 
   const userId = auth.uid;
   const { url } = data;
@@ -560,13 +571,13 @@ exports.importRecipeFromUrl = onCall(async (request) => {
 
     // If we have some data, use AI to clean and structure it
     if (recipeData && openai) {
-      recipeData = await aiStructureRecipe(recipeData, url);
+      recipeData = await aiStructureRecipe(openai, recipeData, url);
     } else if (!recipeData) {
       // Last resort: use AI to extract from page text
       if (!openai) {
         throw new HttpsError('unavailable', 'Could not extract recipe and AI service is not available');
       }
-      recipeData = await aiExtractRecipe($, url);
+      recipeData = await aiExtractRecipe(openai, $, url);
     }
 
     // Validate we have minimum required fields
@@ -905,7 +916,7 @@ function extractHtmlRecipe($, hostname) {
 /**
  * Use AI to structure/clean recipe data
  */
-async function aiStructureRecipe(recipeData, sourceUrl) {
+async function aiStructureRecipe(openai, recipeData, sourceUrl) {
   const prompt = `
 Clean and structure this recipe data extracted from ${sourceUrl}.
 Fix any parsing issues, standardize ingredient amounts, and improve step clarity.
@@ -960,7 +971,7 @@ Return ONLY a valid JSON object (no markdown, no extra text) with this exact str
 /**
  * Use AI to extract recipe from page text when other methods fail
  */
-async function aiExtractRecipe($, sourceUrl) {
+async function aiExtractRecipe(openai, $, sourceUrl) {
   // Get main content text, removing scripts, styles, etc.
   $('script, style, nav, footer, header, aside').remove();
   const pageText = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 8000);
@@ -1109,7 +1120,7 @@ async function downloadAndUploadImage(imageUrl, userId, domain) {
  * Analyze pantry photo using OpenAI Vision
  * Detects food items in an image and returns structured data
  */
-exports.analyzePantryPhoto = onCall(async (request) => {
+exports.analyzePantryPhoto = onCall({ secrets: [openaiApiKey] }, async (request) => {
   const { data, auth } = request;
 
   // Check authentication
@@ -1117,7 +1128,8 @@ exports.analyzePantryPhoto = onCall(async (request) => {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  // Validate OpenAI availability
+  // Get OpenAI client (uses secret)
+  const openai = getOpenAIClient();
   if (!openai) {
     throw new HttpsError('unavailable', 'AI service is not configured');
   }

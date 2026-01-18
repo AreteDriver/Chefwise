@@ -4,6 +4,18 @@
 
 ---
 
+## Screenshots
+
+### Home - AI Chat
+Chat with ChefWise to discover recipes based on what you have.
+![Home](docs/screenshot-home.png)
+
+### My Recipes
+Save and organize your generated recipes with offline access.
+![Recipes](docs/screenshot-recipes.png)
+
+---
+
 ## What It Is
 
 ChefWise is an AI-powered recipe assistant that helps you:
