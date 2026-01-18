@@ -14,18 +14,21 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-export const app = initializeApp(firebaseConfig);
+// Check if Firebase can be initialized (API key must be present)
+const canInitialize = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
 
-// Initialize services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const functions = getFunctions(app);
-export const storage = getStorage(app);
+// Initialize Firebase only if API key is present
+export const app = canInitialize ? initializeApp(firebaseConfig) : null;
+
+// Initialize services only if app is initialized
+export const auth = app ? getAuth(app) : null;
+export const db = app ? getFirestore(app) : null;
+export const functions = app ? getFunctions(app) : null;
+export const storage = app ? getStorage(app) : null;
 
 // Initialize Analytics only on client side
 let analytics = null;
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && app) {
   isSupported().then((supported) => {
     if (supported) {
       analytics = getAnalytics(app);
