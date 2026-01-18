@@ -61,5 +61,16 @@ Thumbs.db
 # Streamlit
 .streamlit/secrets.toml
 
-# Node.js (if needed)
+# Node.js
 node_modules/
+
+# Next.js
+.next/
+out/
+
+# Test artifacts
+playwright-report/
+test-results/
+
+# Temp files
+*.tmp
