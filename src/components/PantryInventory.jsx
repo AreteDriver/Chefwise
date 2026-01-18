@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
   subscribeToPantry,
   addPantryItem,
+  addPantryItemsBulk,
   deletePantryItem,
   isPendingSync,
   LOCAL_STATUS,
 } from '@/utils/offline/pantryService';
 import { useNetworkStatus } from '@/contexts/NetworkStatusContext';
+import PhotoPantryScanner from './PhotoPantryScanner';
 
 /**
  * PantryInventory Component - Manage user's pantry items with offline support
@@ -21,6 +23,7 @@ export default function PantryInventory({ userId, onSuggestRecipes }) {
   const [isFromCache, setIsFromCache] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [bulkAddSuccess, setBulkAddSuccess] = useState(null);
   const { isOnline, incrementPendingCount } = useNetworkStatus();
 
   // Filter items based on search and category
@@ -81,6 +84,22 @@ export default function PantryInventory({ userId, onSuggestRecipes }) {
     }
   };
 
+  const handleBulkAddItems = async (detectedItems) => {
+    try {
+      const addedItems = await addPantryItemsBulk(detectedItems, userId);
+
+      // If offline, increment pending count for each item
+      if (!isOnline) {
+        addedItems.forEach(() => incrementPendingCount());
+      }
+
+      setBulkAddSuccess(`Added ${addedItems.length} item${addedItems.length !== 1 ? 's' : ''} to pantry`);
+      setTimeout(() => setBulkAddSuccess(null), 3000);
+    } catch (error) {
+      console.error('Error adding items from photo:', error);
+    }
+  };
+
   const categories = ['Protein', 'Vegetables', 'Fruits', 'Grains', 'Dairy', 'Spices', 'Other'];
 
   return (
@@ -96,6 +115,22 @@ export default function PantryInventory({ userId, onSuggestRecipes }) {
         </div>
         <p className="text-gray-600">Manage your ingredients and get recipe suggestions</p>
       </div>
+
+      {/* Success Banner */}
+      {bulkAddSuccess && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          {bulkAddSuccess}
+        </div>
+      )}
+
+      {/* Photo Scanner */}
+      <PhotoPantryScanner
+        userId={userId}
+        onItemsDetected={handleBulkAddItems}
+      />
 
       {/* Add Item Form */}
       <form onSubmit={handleAddItem} className="mb-6 p-4 bg-gray-50 rounded-lg">

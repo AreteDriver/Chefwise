@@ -187,6 +187,78 @@ export async function addPantryItem(item, userId) {
 }
 
 /**
+ * Add multiple pantry items at once (works offline)
+ * More efficient than calling addPantryItem multiple times
+ *
+ * @param {Array<Object>} items - Array of items to add
+ * @param {string} userId - User ID
+ * @returns {Promise<Array<Object>>} Array of added items with IDs
+ */
+export async function addPantryItemsBulk(items, userId) {
+  if (!items || items.length === 0) {
+    return [];
+  }
+
+  const isOnline = navigator.onLine;
+  const results = [];
+
+  for (const item of items) {
+    const itemData = {
+      ...item,
+      userId,
+      addedAt: new Date().toISOString(),
+    };
+
+    if (isOnline) {
+      try {
+        const docRef = await addDoc(collection(db, 'pantryItems'), itemData);
+        const newItem = {
+          id: docRef.id,
+          ...itemData,
+          syncStatus: LOCAL_STATUS.SYNCED,
+        };
+
+        await offlineDB.put(STORES.PANTRY, newItem);
+        results.push(newItem);
+      } catch (error) {
+        console.error('[PantryService] Bulk add item failed, queuing:', error);
+        // Fall through to offline handling for this item
+        const localItem = await addItemOffline(itemData, userId);
+        results.push(localItem);
+      }
+    } else {
+      const localItem = await addItemOffline(itemData, userId);
+      results.push(localItem);
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Helper function to add an item offline
+ */
+async function addItemOffline(itemData, userId) {
+  const tempId = generateTempId();
+  const localItem = {
+    id: tempId,
+    ...itemData,
+    syncStatus: LOCAL_STATUS.PENDING_CREATE,
+  };
+
+  await offlineDB.put(STORES.PANTRY, localItem);
+
+  await syncQueue.queueOperation({
+    type: OPERATION_TYPES.CREATE,
+    collection: 'pantry',
+    data: itemData,
+    userId,
+  });
+
+  return localItem;
+}
+
+/**
  * Delete a pantry item (works offline)
  *
  * @param {string} itemId - Item ID to delete
@@ -332,6 +404,7 @@ export function isPendingSync(item) {
 export const pantryService = {
   subscribeToPantry,
   addPantryItem,
+  addPantryItemsBulk,
   deletePantryItem,
   getPendingItems,
   isPendingSync,
