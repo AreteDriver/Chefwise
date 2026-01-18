@@ -1,3 +1,8 @@
+// Mock the auth middleware to bypass authentication in tests
+jest.mock('@/middleware/withAuth', () => ({
+  withAuth: (handler) => handler,
+}));
+
 import handler from '@/pages/api/generate-recipe';
 
 // Mock object to avoid Jest hoisting issues

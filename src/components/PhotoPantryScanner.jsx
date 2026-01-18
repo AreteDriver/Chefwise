@@ -1,4 +1,6 @@
 import React, { useState, useRef } from 'react';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/firebase/firebaseConfig';
 import { useNetworkStatus } from '@/contexts/NetworkStatusContext';
 
 /**
@@ -66,23 +68,18 @@ export default function PhotoPantryScanner({ onItemsDetected, userId }) {
       const mimeType = base64Match[1];
       const base64Data = base64Match[2];
 
-      const response = await fetch('/api/analyze-pantry-photo', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          image: base64Data,
-          mimeType,
-          userId,
-        }),
+      // Use Firebase Cloud Function for secure server-side processing
+      if (!functions) {
+        throw new Error('Firebase not initialized');
+      }
+
+      const analyzePantryPhoto = httpsCallable(functions, 'analyzePantryPhoto');
+      const result = await analyzePantryPhoto({
+        image: base64Data,
+        mimeType,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to analyze image');
-      }
+      const data = result.data;
 
       if (!data.items || data.items.length === 0) {
         setError('No food items detected in this image. Try a clearer photo.');
@@ -92,7 +89,15 @@ export default function PhotoPantryScanner({ onItemsDetected, userId }) {
       }
     } catch (err) {
       console.error('Image analysis error:', err);
-      setError(err.message || 'Failed to analyze image. Please try again.');
+
+      // Handle Firebase function errors
+      if (err.code === 'functions/permission-denied') {
+        setError(err.message || 'Daily limit reached. Upgrade to Premium for unlimited scans.');
+      } else if (err.code === 'functions/unauthenticated') {
+        setError('Please sign in to use photo scanning.');
+      } else {
+        setError(err.message || 'Failed to analyze image. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

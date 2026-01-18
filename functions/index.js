@@ -1106,6 +1106,172 @@ async function downloadAndUploadImage(imageUrl, userId, domain) {
 }
 
 /**
+ * Analyze pantry photo using OpenAI Vision
+ * Detects food items in an image and returns structured data
+ */
+exports.analyzePantryPhoto = onCall(async (request) => {
+  const { data, auth } = request;
+
+  // Check authentication
+  if (!auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  // Validate OpenAI availability
+  if (!openai) {
+    throw new HttpsError('unavailable', 'AI service is not configured');
+  }
+
+  const userId = auth.uid;
+  const { image, mimeType } = data;
+
+  // Validate input
+  if (!image) {
+    throw new HttpsError('invalid-argument', 'Image data is required');
+  }
+
+  if (!mimeType || !ALLOWED_IMAGE_TYPES.includes(mimeType)) {
+    throw new HttpsError('invalid-argument', 'Valid image MIME type is required (jpeg, png, webp, or gif)');
+  }
+
+  // Check rate limit for free users
+  await checkPhotoScanLimit(userId);
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `Identify all food items visible in this image. Return ONLY a valid JSON array with no additional text or markdown formatting.
+
+Each item should have this structure:
+{"name": "item name", "quantity": "estimated amount", "unit": "unit type", "category": "category"}
+
+Categories must be one of: Protein, Vegetables, Fruits, Grains, Dairy, Spices, Other
+
+Guidelines:
+- Be specific with item names (e.g., "chicken breast" not just "chicken")
+- Estimate quantities based on visible amounts (e.g., "2", "1 bunch", "half")
+- Use appropriate units (lbs, oz, cups, pieces, bunch, etc.)
+- Include all visible food items including condiments, beverages, and packaged foods
+- If quantity is unclear, provide a reasonable estimate
+- Return an empty array [] if no food items are visible
+
+Example output format:
+[{"name": "eggs", "quantity": "12", "unit": "pieces", "category": "Protein"}, {"name": "milk", "quantity": "1", "unit": "gallon", "category": "Dairy"}]`,
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: `data:${mimeType};base64,${image}`,
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 1500,
+      temperature: 0.3,
+    });
+
+    const responseText = completion.choices[0].message.content;
+    let items;
+
+    try {
+      items = parseAIResponse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse Vision response:', responseText);
+      throw new HttpsError('internal', 'Failed to parse detected items');
+    }
+
+    // Validate the response is an array
+    if (!Array.isArray(items)) {
+      throw new HttpsError('internal', 'Invalid response format from image analysis');
+    }
+
+    // Normalize and validate each item
+    const validCategories = ['Protein', 'Vegetables', 'Fruits', 'Grains', 'Dairy', 'Spices', 'Other'];
+    const normalizedItems = items
+      .filter((item) => item && typeof item.name === 'string' && item.name.trim())
+      .map((item) => ({
+        name: item.name.trim(),
+        quantity: String(item.quantity || '1').trim(),
+        unit: String(item.unit || 'pieces').trim(),
+        category: validCategories.includes(item.category) ? item.category : 'Other',
+      }));
+
+    // Log usage for analytics
+    await admin.firestore().collection('photoScans').add({
+      userId,
+      itemCount: normalizedItems.length,
+      scannedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return { items: normalizedItems };
+  } catch (error) {
+    console.error('Error analyzing pantry photo:', error);
+
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+
+    if (error.code === 'insufficient_quota') {
+      throw new HttpsError('resource-exhausted', 'AI service quota exceeded');
+    }
+
+    if (error.code === 'rate_limit_exceeded') {
+      throw new HttpsError('unavailable', 'Service temporarily unavailable. Please try again later.');
+    }
+
+    throw new HttpsError('internal', 'Failed to analyze image: ' + error.message);
+  }
+});
+
+/**
+ * Check photo scan rate limit for free users
+ * Free tier: 2 scans per day
+ * Premium: Unlimited
+ */
+async function checkPhotoScanLimit(userId) {
+  const userDoc = await admin.firestore().collection('users').doc(userId).get();
+
+  if (!userDoc.exists) {
+    // New user, allow the scan
+    return true;
+  }
+
+  const userData = userDoc.data();
+  const planTier = userData.planTier || 'free';
+
+  // Premium users have unlimited scans
+  if (planTier === 'premium') {
+    return true;
+  }
+
+  // Check daily usage for free users
+  const today = new Date().toISOString().split('T')[0];
+  const photoScansToday = userData.photoScans?.[today] || 0;
+  const FREE_TIER_LIMIT = 2;
+
+  if (photoScansToday >= FREE_TIER_LIMIT) {
+    throw new HttpsError(
+      'permission-denied',
+      `Daily limit reached (${FREE_TIER_LIMIT} scans/day). Upgrade to Premium for unlimited scans.`
+    );
+  }
+
+  // Increment usage
+  await admin.firestore().collection('users').doc(userId).update({
+    [`photoScans.${today}`]: admin.firestore.FieldValue.increment(1),
+  });
+
+  return true;
+}
+
+/**
  * Delete recipe image from Storage
  * Called when a recipe is deleted to clean up storage
  */
