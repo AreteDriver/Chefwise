@@ -3,14 +3,15 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import PhotoPantryScanner from '../PhotoPantryScanner';
 
-// Mock Firebase functions
-const mockAnalyzePantryPhoto = jest.fn();
-jest.mock('firebase/functions', () => ({
-  httpsCallable: () => mockAnalyzePantryPhoto,
-}));
-
+// Mock Firebase auth
+const mockGetIdToken = jest.fn().mockResolvedValue('mock-id-token');
 jest.mock('@/firebase/firebaseConfig', () => ({
-  functions: {},
+  auth: {
+    currentUser: {
+      uid: 'test-user-123',
+      getIdToken: () => mockGetIdToken(),
+    },
+  },
 }));
 
 // Mock the network status context
@@ -20,12 +21,16 @@ jest.mock('@/contexts/NetworkStatusContext', () => ({
   }),
 }));
 
+// Mock fetch
+global.fetch = jest.fn();
+
 describe('PhotoPantryScanner', () => {
   const mockOnItemsDetected = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAnalyzePantryPhoto.mockReset();
+    global.fetch.mockReset();
+    mockGetIdToken.mockResolvedValue('mock-id-token');
   });
 
   describe('Rendering', () => {
@@ -171,7 +176,7 @@ describe('PhotoPantryScanner', () => {
     it('shows loading state during analysis', async () => {
       await setupWithImage();
 
-      mockAnalyzePantryPhoto.mockImplementation(() => new Promise(() => {})); // Never resolves
+      global.fetch.mockImplementation(() => new Promise(() => {})); // Never resolves
 
       fireEvent.click(screen.getByText('Analyze Photo'));
 
@@ -188,8 +193,9 @@ describe('PhotoPantryScanner', () => {
         { name: 'Milk', quantity: '1', unit: 'gallon', category: 'Dairy' },
       ];
 
-      mockAnalyzePantryPhoto.mockResolvedValue({
-        data: { items: mockItems },
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ items: mockItems }),
       });
 
       fireEvent.click(screen.getByText('Analyze Photo'));
@@ -204,8 +210,9 @@ describe('PhotoPantryScanner', () => {
     it('shows error when no items detected', async () => {
       await setupWithImage();
 
-      mockAnalyzePantryPhoto.mockResolvedValue({
-        data: { items: [] },
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ items: [] }),
       });
 
       fireEvent.click(screen.getByText('Analyze Photo'));
@@ -218,7 +225,10 @@ describe('PhotoPantryScanner', () => {
     it('shows error message on API failure', async () => {
       await setupWithImage();
 
-      mockAnalyzePantryPhoto.mockRejectedValue(new Error('API Error'));
+      global.fetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ error: { message: 'API Error' } }),
+      });
 
       fireEvent.click(screen.getByText('Analyze Photo'));
 
@@ -230,9 +240,12 @@ describe('PhotoPantryScanner', () => {
     it('shows rate limit error message', async () => {
       await setupWithImage();
 
-      const error = new Error('Daily limit reached (2 scans/day). Upgrade to Premium for unlimited scans.');
-      error.code = 'functions/permission-denied';
-      mockAnalyzePantryPhoto.mockRejectedValue(error);
+      global.fetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({
+          error: { message: 'Daily limit reached (2 scans/day). Upgrade to Premium for unlimited scans.' }
+        }),
+      });
 
       fireEvent.click(screen.getByText('Analyze Photo'));
 
@@ -263,8 +276,9 @@ describe('PhotoPantryScanner', () => {
         { name: 'Eggs', quantity: '12', unit: 'pieces', category: 'Protein' },
       ];
 
-      mockAnalyzePantryPhoto.mockResolvedValue({
-        data: { items: mockItems },
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ items: mockItems }),
       });
 
       await waitFor(() => {
@@ -325,8 +339,9 @@ describe('PhotoPantryScanner', () => {
         { name: 'Milk', quantity: '1', unit: 'gallon', category: 'Dairy' },
       ];
 
-      mockAnalyzePantryPhoto.mockResolvedValue({
-        data: { items: mockItems },
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ items: mockItems }),
       });
 
       await waitFor(() => {
@@ -362,8 +377,9 @@ describe('PhotoPantryScanner', () => {
 
       const mockItems = [{ name: 'Eggs', quantity: '12', unit: 'pieces', category: 'Protein' }];
 
-      mockAnalyzePantryPhoto.mockResolvedValue({
-        data: { items: mockItems },
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ items: mockItems }),
       });
 
       await waitFor(() => {
@@ -404,8 +420,9 @@ describe('PhotoPantryScanner', () => {
 
       const mockItems = [{ name: 'Eggs', quantity: '12', unit: 'pieces', category: 'Protein' }];
 
-      mockAnalyzePantryPhoto.mockResolvedValue({
-        data: { items: mockItems },
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ items: mockItems }),
       });
 
       await waitFor(() => {
