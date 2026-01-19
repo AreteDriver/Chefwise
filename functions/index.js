@@ -1118,26 +1118,22 @@ async function downloadAndUploadImage(imageUrl, userId, domain) {
  * Detects food items in an image and returns structured data
  */
 exports.analyzePantryPhoto = onCall({ secrets: [openaiApiKey] }, async (request) => {
-  console.log('analyzePantryPhoto called');
   const { data, auth } = request;
 
-  // Log auth status but don't require it for testing
-  console.log('Auth:', auth ? 'present (uid: ' + auth.uid + ')' : 'missing');
+  // Require authentication
+  if (!auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
 
-  // Get OpenAI client - access secret directly in handler
-  console.log('Getting OpenAI API key from secret...');
+  // Get OpenAI client
   const apiKey = openaiApiKey.value();
-  console.log('API key present:', !!apiKey);
   if (!apiKey) {
     throw new HttpsError('unavailable', 'AI service is not configured');
   }
   const openai = new OpenAI({ apiKey });
 
-  // Use auth.uid if available, otherwise use anonymous
-  const userId = auth?.uid || 'anonymous';
-  console.log('User ID:', userId);
+  const userId = auth.uid;
   const { image, mimeType } = data;
-  console.log('Image size:', image?.length || 0, 'mimeType:', mimeType);
 
   // Validate input
   if (!image) {
@@ -1148,10 +1144,8 @@ exports.analyzePantryPhoto = onCall({ secrets: [openaiApiKey] }, async (request)
     throw new HttpsError('invalid-argument', 'Valid image MIME type is required (jpeg, png, webp, or gif)');
   }
 
-  // Check rate limit for free users (skip for anonymous during testing)
-  if (userId !== 'anonymous') {
-    await checkPhotoScanLimit(userId);
-  }
+  // Check rate limit for free users
+  await checkPhotoScanLimit(userId);
 
   try {
     const completion = await openai.chat.completions.create({
@@ -1264,8 +1258,6 @@ exports.analyzePantryPhotoHttp = onRequest(
       return;
     }
 
-    console.log('analyzePantryPhotoHttp called');
-
     try {
       const { image, mimeType } = req.body;
 
@@ -1288,7 +1280,6 @@ exports.analyzePantryPhotoHttp = onRequest(
       }
       const openai = new OpenAI({ apiKey });
 
-      console.log('Calling OpenAI Vision API...');
       const completion = await openai.chat.completions.create({
         model: 'gpt-4o',
         messages: [
@@ -1329,7 +1320,6 @@ Example output format:
       });
 
       const responseText = completion.choices[0].message.content;
-      console.log('OpenAI response received');
 
       let items;
       try {
@@ -1356,7 +1346,6 @@ Example output format:
           category: validCategories.includes(item.category) ? item.category : 'Other',
         }));
 
-      console.log('Detected', normalizedItems.length, 'items');
       res.status(200).json({ items: normalizedItems });
     } catch (error) {
       console.error('Error analyzing pantry photo:', error);
