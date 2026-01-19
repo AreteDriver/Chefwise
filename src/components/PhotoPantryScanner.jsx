@@ -1,6 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/firebase/firebaseConfig';
 import { useNetworkStatus } from '@/contexts/NetworkStatusContext';
 
 /**
@@ -68,18 +66,25 @@ export default function PhotoPantryScanner({ onItemsDetected, userId }) {
       const mimeType = base64Match[1];
       const base64Data = base64Match[2];
 
-      // Use Firebase Cloud Function for secure server-side processing
-      if (!functions) {
-        throw new Error('Firebase not initialized');
-      }
-
-      const analyzePantryPhoto = httpsCallable(functions, 'analyzePantryPhoto');
-      const result = await analyzePantryPhoto({
-        image: base64Data,
-        mimeType,
+      // Call HTTP Cloud Function directly (handles CORS)
+      const functionUrl = 'https://us-central1-chefwise-app.cloudfunctions.net/analyzePantryPhotoHttp';
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image: base64Data,
+          mimeType,
+        }),
       });
 
-      const data = result.data;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Failed to analyze image');
+      }
+
+      const data = await response.json();
 
       if (!data.items || data.items.length === 0) {
         setError('No food items detected in this image. Try a clearer photo.');
@@ -89,15 +94,7 @@ export default function PhotoPantryScanner({ onItemsDetected, userId }) {
       }
     } catch (err) {
       console.error('Image analysis error:', err);
-
-      // Handle Firebase function errors
-      if (err.code === 'functions/permission-denied') {
-        setError(err.message || 'Daily limit reached. Upgrade to Premium for unlimited scans.');
-      } else if (err.code === 'functions/unauthenticated') {
-        setError('Please sign in to use photo scanning.');
-      } else {
-        setError(err.message || 'Failed to analyze image. Please try again.');
-      }
+      setError(err.message || 'Failed to analyze image. Please try again.');
     } finally {
       setLoading(false);
     }

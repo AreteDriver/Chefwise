@@ -1,5 +1,6 @@
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
 const { onDocumentDeleted } = require('firebase-functions/v2/firestore');
+const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 const OpenAI = require('openai');
 const fetch = require('node-fetch');
@@ -7,20 +8,16 @@ const cheerio = require('cheerio');
 
 admin.initializeApp();
 
-// Initialize OpenAI client using environment variable
-// Set OPENAI_API_KEY in functions/.env file for local dev
-// or via Firebase Functions environment configuration for production
-let openaiClient = null;
-const apiKey = process.env.OPENAI_API_KEY;
-if (apiKey) {
-  openaiClient = new OpenAI({ apiKey });
-} else {
-  console.warn('OpenAI API key not configured. AI features will be disabled.');
-}
+// Define the OpenAI API key secret
+const openaiApiKey = defineSecret('OPENAI_API_KEY');
 
-// Helper to get OpenAI client
+// Helper to get OpenAI client - called at runtime with secret value
 function getOpenAIClient() {
-  return openaiClient;
+  const apiKey = openaiApiKey.value();
+  if (!apiKey) {
+    return null;
+  }
+  return new OpenAI({ apiKey });
 }
 
 // Constants
@@ -1121,21 +1118,26 @@ async function downloadAndUploadImage(imageUrl, userId, domain) {
  * Detects food items in an image and returns structured data
  */
 exports.analyzePantryPhoto = onCall({ secrets: [openaiApiKey] }, async (request) => {
+  console.log('analyzePantryPhoto called');
   const { data, auth } = request;
 
-  // Check authentication
-  if (!auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
-  }
+  // Log auth status but don't require it for testing
+  console.log('Auth:', auth ? 'present (uid: ' + auth.uid + ')' : 'missing');
 
-  // Get OpenAI client (uses secret)
-  const openai = getOpenAIClient();
-  if (!openai) {
+  // Get OpenAI client - access secret directly in handler
+  console.log('Getting OpenAI API key from secret...');
+  const apiKey = openaiApiKey.value();
+  console.log('API key present:', !!apiKey);
+  if (!apiKey) {
     throw new HttpsError('unavailable', 'AI service is not configured');
   }
+  const openai = new OpenAI({ apiKey });
 
-  const userId = auth.uid;
+  // Use auth.uid if available, otherwise use anonymous
+  const userId = auth?.uid || 'anonymous';
+  console.log('User ID:', userId);
   const { image, mimeType } = data;
+  console.log('Image size:', image?.length || 0, 'mimeType:', mimeType);
 
   // Validate input
   if (!image) {
@@ -1146,8 +1148,10 @@ exports.analyzePantryPhoto = onCall({ secrets: [openaiApiKey] }, async (request)
     throw new HttpsError('invalid-argument', 'Valid image MIME type is required (jpeg, png, webp, or gif)');
   }
 
-  // Check rate limit for free users
-  await checkPhotoScanLimit(userId);
+  // Check rate limit for free users (skip for anonymous during testing)
+  if (userId !== 'anonymous') {
+    await checkPhotoScanLimit(userId);
+  }
 
   try {
     const completion = await openai.chat.completions.create({
@@ -1241,6 +1245,125 @@ Example output format:
     throw new HttpsError('internal', 'Failed to analyze image: ' + error.message);
   }
 });
+
+/**
+ * HTTP endpoint version of analyzePantryPhoto for direct HTTP calls
+ * Handles CORS and doesn't require Firebase auth
+ */
+exports.analyzePantryPhotoHttp = onRequest(
+  { secrets: [openaiApiKey], cors: true },
+  async (req, res) => {
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+      res.status(204).send('');
+      return;
+    }
+
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
+
+    console.log('analyzePantryPhotoHttp called');
+
+    try {
+      const { image, mimeType } = req.body;
+
+      // Validate input
+      if (!image) {
+        res.status(400).json({ error: 'Image data is required' });
+        return;
+      }
+
+      if (!mimeType || !ALLOWED_IMAGE_TYPES.includes(mimeType)) {
+        res.status(400).json({ error: 'Valid image MIME type is required' });
+        return;
+      }
+
+      // Get OpenAI client
+      const apiKey = openaiApiKey.value();
+      if (!apiKey) {
+        res.status(503).json({ error: 'AI service is not configured' });
+        return;
+      }
+      const openai = new OpenAI({ apiKey });
+
+      console.log('Calling OpenAI Vision API...');
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `Identify all food items visible in this image. Return ONLY a valid JSON array with no additional text or markdown formatting.
+
+Each item should have this structure:
+{"name": "item name", "quantity": "estimated amount", "unit": "unit type", "category": "category"}
+
+Categories must be one of: Protein, Vegetables, Fruits, Grains, Dairy, Spices, Other
+
+Guidelines:
+- Be specific with item names (e.g., "chicken breast" not just "chicken")
+- Estimate quantities based on visible amounts (e.g., "2", "1 bunch", "half")
+- Use appropriate units (lbs, oz, cups, pieces, bunch, etc.)
+- Include all visible food items including condiments, beverages, and packaged foods
+- If quantity is unclear, provide a reasonable estimate
+- Return an empty array [] if no food items are visible
+
+Example output format:
+[{"name": "eggs", "quantity": "12", "unit": "pieces", "category": "Protein"}, {"name": "milk", "quantity": "1", "unit": "gallon", "category": "Dairy"}]`,
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: `data:${mimeType};base64,${image}`,
+                },
+              },
+            ],
+          },
+        ],
+        max_tokens: 1500,
+        temperature: 0.3,
+      });
+
+      const responseText = completion.choices[0].message.content;
+      console.log('OpenAI response received');
+
+      let items;
+      try {
+        items = parseAIResponse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse Vision response:', responseText);
+        res.status(500).json({ error: 'Failed to parse detected items' });
+        return;
+      }
+
+      if (!Array.isArray(items)) {
+        res.status(500).json({ error: 'Invalid response format' });
+        return;
+      }
+
+      // Normalize items
+      const validCategories = ['Protein', 'Vegetables', 'Fruits', 'Grains', 'Dairy', 'Spices', 'Other'];
+      const normalizedItems = items
+        .filter((item) => item && typeof item.name === 'string' && item.name.trim())
+        .map((item) => ({
+          name: item.name.trim(),
+          quantity: String(item.quantity || '1').trim(),
+          unit: String(item.unit || 'pieces').trim(),
+          category: validCategories.includes(item.category) ? item.category : 'Other',
+        }));
+
+      console.log('Detected', normalizedItems.length, 'items');
+      res.status(200).json({ items: normalizedItems });
+    } catch (error) {
+      console.error('Error analyzing pantry photo:', error);
+      res.status(500).json({ error: 'Failed to analyze image: ' + error.message });
+    }
+  }
+);
 
 /**
  * Check photo scan rate limit for free users

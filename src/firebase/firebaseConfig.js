@@ -23,7 +23,7 @@ export const app = canInitialize ? initializeApp(firebaseConfig) : null;
 // Initialize services only if app is initialized
 export const auth = app ? getAuth(app) : null;
 export const db = app ? getFirestore(app) : null;
-export const functions = app ? getFunctions(app) : null;
+export const functions = app ? getFunctions(app, 'us-central1') : null;
 export const storage = app ? getStorage(app) : null;
 
 // Initialize Analytics only on client side
