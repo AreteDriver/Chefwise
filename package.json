@@ -39,9 +39,12 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "ios:build": "next build && npx cap sync ios",
-    "ios:open": "npx cap open ios"
+    "ios:open": "npx cap open ios",
+    "android:build": "next build && npx cap sync android",
+    "android:open": "npx cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.0.1",
     "@capacitor/camera": "^8.0.0",
     "@capacitor/cli": "^7.4.5",
     "@capacitor/core": "^8.0.1",

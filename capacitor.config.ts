@@ -8,6 +8,9 @@ const config: CapacitorConfig = {
     contentInset: 'automatic',
     backgroundColor: '#ffffff',
   },
+  android: {
+    backgroundColor: '#ffffff',
+  },
   plugins: {
     Camera: {
       presentationStyle: 'popover',

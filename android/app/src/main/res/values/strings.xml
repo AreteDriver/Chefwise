@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Chefwise</string>
+    <string name="title_activity_main">Chefwise</string>
+    <string name="package_name">com.chefwise.app</string>
+    <string name="custom_url_scheme">com.chefwise.app</string>
+</resources>
