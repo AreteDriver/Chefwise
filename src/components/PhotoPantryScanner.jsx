@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNetworkStatus } from '@/contexts/NetworkStatusContext';
+import { auth } from '@/firebase/firebaseConfig';
 
 /**
  * PhotoPantryScanner - Scan photos to detect and add pantry items
@@ -66,12 +67,20 @@ export default function PhotoPantryScanner({ onItemsDetected, userId }) {
       const mimeType = base64Match[1];
       const base64Data = base64Match[2];
 
-      // Call HTTP Cloud Function directly (handles CORS)
+      // Get auth token
+      const user = auth?.currentUser;
+      if (!user) {
+        throw new Error('Please sign in to use photo scanning');
+      }
+      const idToken = await user.getIdToken();
+
+      // Call HTTP Cloud Function with auth token
       const functionUrl = 'https://us-central1-chefwise-app.cloudfunctions.net/analyzePantryPhotoHttp';
       const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
         },
         body: JSON.stringify({
           image: base64Data,

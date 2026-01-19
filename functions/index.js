@@ -1242,7 +1242,7 @@ Example output format:
 
 /**
  * HTTP endpoint version of analyzePantryPhoto for direct HTTP calls
- * Handles CORS and doesn't require Firebase auth
+ * Handles CORS and verifies Firebase auth token
  */
 exports.analyzePantryPhotoHttp = onRequest(
   { secrets: [openaiApiKey], cors: true },
@@ -1258,6 +1258,23 @@ exports.analyzePantryPhotoHttp = onRequest(
       return;
     }
 
+    // Verify Firebase auth token
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Missing or invalid authorization header' });
+      return;
+    }
+
+    const idToken = authHeader.split('Bearer ')[1];
+    let userId;
+    try {
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      userId = decodedToken.uid;
+    } catch (authError) {
+      res.status(401).json({ error: 'Invalid or expired auth token' });
+      return;
+    }
+
     try {
       const { image, mimeType } = req.body;
 
@@ -1269,6 +1286,14 @@ exports.analyzePantryPhotoHttp = onRequest(
 
       if (!mimeType || !ALLOWED_IMAGE_TYPES.includes(mimeType)) {
         res.status(400).json({ error: 'Valid image MIME type is required' });
+        return;
+      }
+
+      // Check rate limit for free users
+      try {
+        await checkPhotoScanLimit(userId);
+      } catch (limitError) {
+        res.status(429).json({ error: limitError.message || 'Rate limit exceeded' });
         return;
       }
 
@@ -1345,6 +1370,13 @@ Example output format:
           unit: String(item.unit || 'pieces').trim(),
           category: validCategories.includes(item.category) ? item.category : 'Other',
         }));
+
+      // Log usage for analytics
+      await admin.firestore().collection('photoScans').add({
+        userId,
+        itemCount: normalizedItems.length,
+        scannedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
 
       res.status(200).json({ items: normalizedItems });
     } catch (error) {
