@@ -59,6 +59,86 @@ A Flutter mobile application for ChefWise - an AI-powered cooking assistant.
 ### Prerequisites
 - Flutter SDK 3.0.0 or higher
 - Dart SDK
+- Firebase project (shared with web app)
+
+### Firebase Setup
+
+The app uses Firebase for authentication, data sync, and AI features. Follow these steps to configure Firebase:
+
+#### 1. Generate Native Platform Files
+
+If `android/` and `ios/` folders don't exist, generate them:
+
+```bash
+cd mobile
+flutter create .
+```
+
+#### 2. Android Configuration
+
+1. **Download `google-services.json`**:
+   - Go to [Firebase Console](https://console.firebase.google.com)
+   - Select your project → Project Settings → Your apps → Android
+   - Download `google-services.json`
+   - Place it in `android/app/`
+
+2. **Update `android/build.gradle`**:
+   ```gradle
+   buildscript {
+       dependencies {
+           // Add this line
+           classpath 'com.google.gms:google-services:4.4.0'
+       }
+   }
+   ```
+
+3. **Update `android/app/build.gradle`**:
+   ```gradle
+   plugins {
+       id 'com.android.application'
+       id 'kotlin-android'
+       id 'dev.flutter.flutter-gradle-plugin'
+       id 'com.google.gms.google-services'  // Add this line
+   }
+
+   android {
+       defaultConfig {
+           minSdk = 23  // Required for Firebase Auth
+       }
+   }
+   ```
+
+#### 3. iOS Configuration
+
+1. **Download `GoogleService-Info.plist`**:
+   - Go to [Firebase Console](https://console.firebase.google.com)
+   - Select your project → Project Settings → Your apps → iOS
+   - Download `GoogleService-Info.plist`
+   - Place it in `ios/Runner/`
+   - Add to Xcode: Open `ios/Runner.xcworkspace`, drag file into Runner folder
+
+2. **Update `ios/Runner/Info.plist`** for Google Sign-In:
+   ```xml
+   <key>CFBundleURLTypes</key>
+   <array>
+       <dict>
+           <key>CFBundleTypeRole</key>
+           <string>Editor</string>
+           <key>CFBundleURLSchemes</key>
+           <array>
+               <!-- Replace with your REVERSED_CLIENT_ID from GoogleService-Info.plist -->
+               <string>com.googleusercontent.apps.YOUR-CLIENT-ID</string>
+           </array>
+       </dict>
+   </array>
+   ```
+
+#### 4. Enable Firebase Services
+
+In Firebase Console, enable:
+- **Authentication** → Sign-in method → Google
+- **Cloud Firestore** → Create database (start in test mode for development)
+- **Cloud Functions** (requires Blaze plan for calling functions)
 
 ### Installation
 
@@ -100,15 +180,21 @@ mobile/
 │   │   ├── recipe.dart
 │   │   └── meal_plan.dart
 │   ├── screens/             # UI screens
+│   │   ├── auth/
+│   │   │   └── sign_in_screen.dart
 │   │   ├── onboarding/
 │   │   ├── home/
 │   │   ├── pantry/
 │   │   ├── plan/
+│   │   ├── recipe/
 │   │   └── me/
-│   ├── services/            # Business logic
+│   ├── services/            # Business logic + Firebase
+│   │   ├── auth_service.dart           # Google Sign-In
 │   │   ├── user_preferences_service.dart
 │   │   ├── pantry_service.dart
-│   │   └── meal_plan_service.dart
+│   │   ├── recipe_service.dart
+│   │   ├── meal_plan_service.dart
+│   │   └── cloud_functions_service.dart  # AI generation
 │   ├── theme/               # Design system
 │   │   ├── app_colors.dart
 │   │   ├── app_text_styles.dart
@@ -117,16 +203,24 @@ mobile/
 ├── assets/
 │   ├── images/
 │   └── icons/
+├── android/                 # Generated with `flutter create .`
+│   └── app/
+│       └── google-services.json  # Firebase config (from console)
+├── ios/                     # Generated with `flutter create .`
+│   └── Runner/
+│       └── GoogleService-Info.plist  # Firebase config (from console)
 ├── pubspec.yaml
 └── README.md
 ```
 
 ## State Management
 
-The app uses Provider for state management:
-- `UserPreferencesService`: Manages user preferences and onboarding state
-- `PantryService`: Manages pantry inventory
-- `MealPlanService`: Manages weekly meal plans
+The app uses Provider for state management with Firebase integration:
+- `AuthService`: Firebase Auth + Google Sign-In
+- `UserPreferencesService`: User preferences synced to Firestore (`users` collection)
+- `PantryService`: Pantry inventory synced to Firestore (`pantryItems` collection)
+- `RecipeService`: Saved recipes + Cloud Functions for AI generation
+- `MealPlanService`: Meal plans synced to Firestore (`mealPlans` collection)
 
 ## Navigation
 
@@ -136,11 +230,18 @@ The app uses Provider for state management:
 
 ## Dependencies
 
+### Core
 - `provider`: State management
 - `google_fonts`: Typography (Poppins, Inter)
-- `shared_preferences`: Local storage
+- `shared_preferences`: Local storage (offline cache)
 - `flutter_svg`: SVG support
-- `go_router`: Advanced routing (optional)
+
+### Firebase
+- `firebase_core`: Firebase initialization
+- `firebase_auth`: Authentication
+- `cloud_firestore`: Real-time database
+- `cloud_functions`: AI recipe/meal plan generation
+- `google_sign_in`: Google OAuth
 
 ## License
 

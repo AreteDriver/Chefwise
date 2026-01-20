@@ -2,11 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../services/auth_service.dart';
 import '../../services/user_preferences_service.dart';
 
 /// Me Tab - Profile and preferences
 class MeTab extends StatelessWidget {
   const MeTab({super.key});
+
+  void _showSignOutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              final auth = context.read<AuthService>();
+              final prefs = context.read<UserPreferencesService>();
+              await prefs.resetOnboarding();
+              await auth.signOut();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.error,
+            ),
+            child: const Text('Sign Out'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,24 +56,40 @@ class MeTab extends StatelessWidget {
               ),
 
               // Profile Section
-              Consumer<UserPreferencesService>(
-                builder: (context, prefs, _) {
+              Consumer2<AuthService, UserPreferencesService>(
+                builder: (context, auth, prefs, _) {
                   return Column(
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 50,
                         backgroundColor: AppColors.primary,
-                        child: Icon(
-                          Icons.person,
-                          size: 50,
-                          color: Colors.white,
-                        ),
+                        backgroundImage: auth.photoUrl != null
+                            ? NetworkImage(auth.photoUrl!)
+                            : null,
+                        child: auth.photoUrl == null
+                            ? const Icon(
+                                Icons.person,
+                                size: 50,
+                                color: Colors.white,
+                              )
+                            : null,
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        prefs.preferences.name ?? 'Chef User',
+                        auth.displayName ??
+                            prefs.preferences.name ??
+                            'Chef User',
                         style: AppTextStyles.titleMedium,
                       ),
+                      if (auth.userEmail != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          auth.userEmail!,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 4),
                       Text(
                         'Free Plan',
@@ -168,9 +214,7 @@ class MeTab extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: OutlinedButton(
-                  onPressed: () {
-                    // Show sign out dialog
-                  },
+                  onPressed: () => _showSignOutDialog(context),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),
                     side: const BorderSide(color: AppColors.error),

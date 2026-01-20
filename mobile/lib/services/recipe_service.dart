@@ -1,24 +1,101 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/recipe.dart';
+import 'cloud_functions_service.dart';
 
-/// Service for managing recipes
+/// Service for managing recipes with Firestore sync and Cloud Functions
 class RecipeService extends ChangeNotifier {
   static const int maxGeneratedRecipes = 3;
-  
-  final List<Recipe> _recipes = [];
-  
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final CloudFunctionsService _cloudFunctions = CloudFunctionsService();
+
+  List<Recipe> _recipes = [];
+  bool _isLoading = true;
+  bool _isGenerating = false;
+  String? _error;
+  StreamSubscription<QuerySnapshot>? _firestoreSubscription;
+  StreamSubscription<User?>? _authSubscription;
+
   List<Recipe> get recipes => List.unmodifiable(_recipes);
+  bool get isLoading => _isLoading;
+  bool get isGenerating => _isGenerating;
+  String? get error => _error;
+
+  String? get _userId => _auth.currentUser?.uid;
 
   RecipeService() {
-    _loadSampleRecipes();
+    _init();
   }
 
+  void _init() {
+    // Listen to auth state changes
+    _authSubscription = _auth.authStateChanges().listen((User? user) {
+      if (user != null) {
+        _loadFromFirestore();
+      } else {
+        // User signed out
+        _firestoreSubscription?.cancel();
+        _recipes = [];
+        _isLoading = false;
+        notifyListeners();
+      }
+    });
+  }
+
+  /// Load and listen to saved recipes from Firestore
+  Future<void> _loadFromFirestore() async {
+    final userId = _userId;
+    if (userId == null) {
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+
+    // Cancel any existing subscription
+    await _firestoreSubscription?.cancel();
+
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      // Set up real-time listener
+      _firestoreSubscription = _firestore
+          .collection('recipes')
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .snapshots()
+          .listen((snapshot) {
+        _recipes = snapshot.docs.map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
+          return Recipe.fromJson(data);
+        }).toList();
+
+        _isLoading = false;
+        notifyListeners();
+      }, onError: (e) {
+        debugPrint('Firestore listen error: $e');
+        // Fall back to sample data on error
+        _loadSampleRecipes();
+      });
+    } catch (e) {
+      debugPrint('Error setting up Firestore listener: $e');
+      _loadSampleRecipes();
+    }
+  }
+
+  /// Load sample recipes for demo/offline mode
   void _loadSampleRecipes() {
-    _recipes.addAll([
+    _recipes = [
       Recipe(
         id: 'r1',
         title: 'Grilled Chicken Salad',
-        description: 'A healthy and protein-packed salad with grilled chicken, fresh vegetables, and a light vinaigrette.',
+        description:
+            'A healthy and protein-packed salad with grilled chicken, fresh vegetables, and a light vinaigrette.',
         ingredients: [
           '2 chicken breasts',
           '4 cups mixed greens',
@@ -56,7 +133,8 @@ class RecipeService extends ChangeNotifier {
       Recipe(
         id: 'r2',
         title: 'Pasta Primavera',
-        description: 'A colorful vegetarian pasta dish loaded with fresh spring vegetables.',
+        description:
+            'A colorful vegetarian pasta dish loaded with fresh spring vegetables.',
         ingredients: [
           '12 oz pasta (penne or fusilli)',
           '2 cups broccoli florets',
@@ -94,7 +172,8 @@ class RecipeService extends ChangeNotifier {
       Recipe(
         id: 'r3',
         title: 'Veggie Stir Fry',
-        description: 'A quick and easy Asian-inspired stir fry with colorful vegetables.',
+        description:
+            'A quick and easy Asian-inspired stir fry with colorful vegetables.',
         ingredients: [
           '2 cups mixed vegetables (bell peppers, carrots, snap peas)',
           '1 cup mushrooms, sliced',
@@ -129,92 +208,47 @@ class RecipeService extends ChangeNotifier {
         ),
         tags: ['Vegan', 'Quick', 'Low Calorie'],
       ),
-      Recipe(
-        id: 'r4',
-        title: 'Salmon Bowl',
-        description: 'A nutritious bowl with pan-seared salmon, quinoa, and fresh vegetables.',
-        ingredients: [
-          '2 salmon fillets (6 oz each)',
-          '1 cup cooked quinoa',
-          '1 avocado, sliced',
-          '1 cup edamame',
-          '1/2 cup shredded carrots',
-          '2 tbsp soy sauce',
-          '1 tbsp honey',
-          'Sesame seeds and green onions for garnish',
-        ],
-        steps: [
-          'Season salmon with salt and pepper.',
-          'Heat a pan over medium-high heat.',
-          'Cook salmon skin-side down for 4 minutes.',
-          'Flip and cook for another 3-4 minutes.',
-          'Divide quinoa between two bowls.',
-          'Top with salmon, avocado, edamame, and carrots.',
-          'Mix soy sauce and honey for the dressing.',
-          'Drizzle dressing over bowls and garnish.',
-        ],
-        prepTime: 10,
-        cookTime: 15,
-        servings: 2,
-        macros: RecipeMacros(
-          calories: 550,
-          protein: 40,
-          carbs: 45,
-          fat: 22,
-          fiber: 10,
-          sugar: 8,
-          sodium: 650,
-        ),
-        tags: ['High Protein', 'Healthy', 'Omega-3'],
-      ),
-      Recipe(
-        id: 'r5',
-        title: 'Quinoa Salad',
-        description: 'A refreshing Mediterranean-inspired quinoa salad.',
-        ingredients: [
-          '1 cup quinoa, cooked',
-          '1 cup cherry tomatoes, halved',
-          '1 cucumber, diced',
-          '1/2 cup feta cheese, crumbled',
-          '1/4 cup olives, sliced',
-          '2 tbsp lemon juice',
-          '2 tbsp olive oil',
-          'Fresh parsley, chopped',
-        ],
-        steps: [
-          'Cook quinoa according to package directions and let cool.',
-          'In a large bowl, combine cooled quinoa, tomatoes, and cucumber.',
-          'Add feta cheese and olives.',
-          'Whisk together lemon juice and olive oil.',
-          'Pour dressing over the salad.',
-          'Toss gently to combine.',
-          'Garnish with fresh parsley.',
-          'Chill for 15 minutes before serving (optional).',
-        ],
-        prepTime: 15,
-        cookTime: 20,
-        servings: 4,
-        macros: RecipeMacros(
-          calories: 280,
-          protein: 10,
-          carbs: 32,
-          fat: 12,
-          fiber: 5,
-          sugar: 4,
-          sodium: 350,
-        ),
-        tags: ['Vegetarian', 'Healthy', 'Mediterranean', 'Meal Prep'],
-      ),
-    ]);
-  }
-
-  List<Recipe> generateRecipes(Map<String, dynamic> filters) {
-    // In a real app, this would call an AI service
-    // For now, return filtered sample recipes
+    ];
+    _isLoading = false;
     notifyListeners();
-    return _recipes.take(maxGeneratedRecipes).toList();
   }
 
+  /// Generate recipes using AI via Cloud Functions
+  Future<List<Recipe>> generateRecipes(Map<String, dynamic> filters) async {
+    _isGenerating = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // Try to call Cloud Function
+      final recipe = await _cloudFunctions.generateRecipe(filters);
+
+      // Save generated recipe to Firestore
+      await saveRecipe(recipe);
+
+      _isGenerating = false;
+      notifyListeners();
+      return [recipe];
+    } on CloudFunctionException catch (e) {
+      debugPrint('Cloud Function error: $e');
+      _error = e.message;
+      _isGenerating = false;
+      notifyListeners();
+
+      // Fall back to sample recipes
+      return _recipes.take(maxGeneratedRecipes).toList();
+    } catch (e) {
+      debugPrint('Error generating recipes: $e');
+      _error = 'Failed to generate recipes. Showing saved recipes instead.';
+      _isGenerating = false;
+      notifyListeners();
+
+      // Fall back to sample recipes
+      return _recipes.take(maxGeneratedRecipes).toList();
+    }
+  }
+
+  /// Get a recipe by ID
   Recipe? getRecipeById(String id) {
     try {
       return _recipes.firstWhere((recipe) => recipe.id == id);
@@ -223,13 +257,65 @@ class RecipeService extends ChangeNotifier {
     }
   }
 
-  void addRecipe(Recipe recipe) {
-    _recipes.add(recipe);
+  /// Save a recipe to Firestore
+  Future<void> saveRecipe(Recipe recipe) async {
+    final userId = _userId;
+    if (userId == null) {
+      // Offline mode - add locally
+      _recipes.insert(0, recipe);
+      notifyListeners();
+      return;
+    }
+
+    try {
+      final data = recipe.toJson();
+      data['userId'] = userId;
+      data['createdAt'] = FieldValue.serverTimestamp();
+
+      await _firestore.collection('recipes').add(data);
+      // Real-time listener will update _recipes
+    } catch (e) {
+      debugPrint('Error saving recipe: $e');
+      // Add locally as fallback
+      _recipes.insert(0, recipe);
+      notifyListeners();
+    }
+  }
+
+  /// Add a recipe (alias for saveRecipe)
+  Future<void> addRecipe(Recipe recipe) => saveRecipe(recipe);
+
+  /// Remove a recipe from Firestore
+  Future<void> removeRecipe(String id) async {
+    final userId = _userId;
+    if (userId == null) {
+      // Offline mode - remove locally
+      _recipes.removeWhere((recipe) => recipe.id == id);
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await _firestore.collection('recipes').doc(id).delete();
+      // Real-time listener will update _recipes
+    } catch (e) {
+      debugPrint('Error removing recipe: $e');
+      // Remove locally as fallback
+      _recipes.removeWhere((recipe) => recipe.id == id);
+      notifyListeners();
+    }
+  }
+
+  /// Clear any error message
+  void clearError() {
+    _error = null;
     notifyListeners();
   }
 
-  void removeRecipe(String id) {
-    _recipes.removeWhere((recipe) => recipe.id == id);
-    notifyListeners();
+  @override
+  void dispose() {
+    _firestoreSubscription?.cancel();
+    _authSubscription?.cancel();
+    super.dispose();
   }
 }

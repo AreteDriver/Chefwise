@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'services/auth_service.dart';
 import 'services/user_preferences_service.dart';
 import 'services/pantry_service.dart';
 import 'services/meal_plan_service.dart';
 import 'services/recipe_service.dart';
 import 'theme/app_theme.dart';
+import 'screens/auth/sign_in_screen.dart';
 import 'screens/onboarding/welcome_screen.dart';
 import 'screens/onboarding/select_goals_screen.dart';
 import 'screens/onboarding/dietary_needs_screen.dart';
@@ -14,7 +17,9 @@ import 'screens/pantry/pantry_tab.dart';
 import 'screens/plan/plan_tab.dart';
 import 'screens/me/me_tab.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const ChefWiseApp());
 }
 
@@ -25,6 +30,7 @@ class ChefWiseApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProvider(create: (_) => UserPreferencesService()),
         ChangeNotifierProvider(create: (_) => PantryService()),
         ChangeNotifierProvider(create: (_) => MealPlanService()),
@@ -40,15 +46,16 @@ class ChefWiseApp extends StatelessWidget {
   }
 }
 
-/// Main app navigator that handles onboarding and main navigation
+/// Main app navigator that handles auth, onboarding, and main navigation
 class AppNavigator extends StatelessWidget {
   const AppNavigator({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserPreferencesService>(
-      builder: (context, prefs, _) {
-        if (prefs.isLoading) {
+    return Consumer2<AuthService, UserPreferencesService>(
+      builder: (context, auth, prefs, _) {
+        // Show loading while auth or prefs are initializing
+        if (auth.isLoading || prefs.isLoading) {
           return const Scaffold(
             body: Center(
               child: CircularProgressIndicator(),
@@ -56,10 +63,17 @@ class AppNavigator extends StatelessWidget {
           );
         }
 
+        // Not authenticated - show sign in
+        if (!auth.isAuthenticated) {
+          return const SignInScreen();
+        }
+
+        // Authenticated but haven't completed onboarding
         if (!prefs.hasCompletedOnboarding) {
           return const OnboardingFlow();
         }
 
+        // Authenticated and onboarded - show main screen
         return const MainScreen();
       },
     );
