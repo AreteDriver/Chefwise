@@ -1,7 +1,13 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/firebase/firebaseConfig';
-import { PLAN_TIERS } from '@/utils/SubscriptionGate';
+import {
+  PLAN_TIERS,
+  PLAN_LIMITS,
+  normalizePlanTier,
+  isPaidTier,
+  getTierDisplayName,
+} from '@/utils/SubscriptionGate';
 
 const SubscriptionContext = createContext();
 
@@ -18,6 +24,13 @@ export function SubscriptionProvider({ children, user }) {
     planTier: PLAN_TIERS.FREE,
     status: 'inactive',
     loading: true,
+    // Convenience flags
+    isPaid: false,
+    isPro: false,
+    isChef: false,
+    isFree: true,
+    // Legacy compatibility
+    isPremium: false,
   });
 
   useEffect(() => {
@@ -26,6 +39,13 @@ export function SubscriptionProvider({ children, user }) {
         planTier: PLAN_TIERS.FREE,
         status: 'inactive',
         loading: false,
+        isPaid: false,
+        isPro: false,
+        isChef: false,
+        isFree: true,
+        isPremium: false,
+        limits: PLAN_LIMITS[PLAN_TIERS.FREE],
+        tierName: 'Free',
       });
       return;
     }
@@ -36,21 +56,40 @@ export function SubscriptionProvider({ children, user }) {
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
+          const normalizedTier = normalizePlanTier(data.planTier);
+          const limits = PLAN_LIMITS[normalizedTier];
+
           setSubscription({
-            planTier: data.planTier || PLAN_TIERS.FREE,
+            planTier: normalizedTier,
             status: data.subscriptionStatus || 'inactive',
             stripeCustomerId: data.stripeCustomerId,
             stripeSubscriptionId: data.stripeSubscriptionId,
             subscriptionPeriodEnd: data.subscriptionPeriodEnd?.toDate(),
+            billingPeriod: data.billingPeriod || 'monthly',
             loading: false,
-            isPremium: data.planTier === PLAN_TIERS.PREMIUM,
+            // Convenience flags
+            isPaid: isPaidTier(normalizedTier),
+            isPro: normalizedTier === PLAN_TIERS.PRO,
+            isChef: normalizedTier === PLAN_TIERS.CHEF,
+            isFree: normalizedTier === PLAN_TIERS.FREE,
+            // Legacy compatibility
+            isPremium: isPaidTier(normalizedTier),
+            // Plan limits for easy access
+            limits,
+            tierName: getTierDisplayName(normalizedTier),
           });
         } else {
           setSubscription({
             planTier: PLAN_TIERS.FREE,
             status: 'inactive',
             loading: false,
+            isPaid: false,
+            isPro: false,
+            isChef: false,
+            isFree: true,
             isPremium: false,
+            limits: PLAN_LIMITS[PLAN_TIERS.FREE],
+            tierName: 'Free',
           });
         }
       },
@@ -60,7 +99,13 @@ export function SubscriptionProvider({ children, user }) {
           planTier: PLAN_TIERS.FREE,
           status: 'inactive',
           loading: false,
+          isPaid: false,
+          isPro: false,
+          isChef: false,
+          isFree: true,
           isPremium: false,
+          limits: PLAN_LIMITS[PLAN_TIERS.FREE],
+          tierName: 'Free',
         });
       }
     );
@@ -68,8 +113,25 @@ export function SubscriptionProvider({ children, user }) {
     return () => unsubscribe();
   }, [user]);
 
+  // Helper methods
+  const canUseFeature = (feature) => {
+    const limits = subscription.limits || PLAN_LIMITS[PLAN_TIERS.FREE];
+    return limits[feature] === true || limits[feature] === Infinity;
+  };
+
+  const getFeatureLimit = (feature) => {
+    const limits = subscription.limits || PLAN_LIMITS[PLAN_TIERS.FREE];
+    return limits[feature];
+  };
+
+  const value = {
+    ...subscription,
+    canUseFeature,
+    getFeatureLimit,
+  };
+
   return (
-    <SubscriptionContext.Provider value={subscription}>
+    <SubscriptionContext.Provider value={value}>
       {children}
     </SubscriptionContext.Provider>
   );
