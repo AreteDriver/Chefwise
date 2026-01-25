@@ -59,6 +59,14 @@ export default async function handler(req, res) {
       });
     }
 
+    // Validate price ID format (Stripe price IDs start with 'price_')
+    if (!selectedPriceId.startsWith('price_')) {
+      console.error('Invalid Stripe price ID format:', selectedPriceId);
+      return res.status(500).json({
+        error: 'Price configuration error. Please contact support.',
+      });
+    }
+
     // Create or retrieve Stripe customer
     let customer;
     const existingCustomers = await stripe.customers.list({

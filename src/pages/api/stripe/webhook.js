@@ -5,17 +5,31 @@ import admin from 'firebase-admin';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 /**
- * Mapping of Stripe Price IDs to plan tiers
- * This helps determine the correct tier when a subscription is created/updated
+ * Firebase UID validation regex
+ * UIDs are typically 20-128 alphanumeric characters
  */
-const PRICE_TO_TIER = {
-  [process.env.STRIPE_PRICE_PRO_MONTHLY]: 'pro',
-  [process.env.STRIPE_PRICE_PRO_YEARLY]: 'pro',
-  [process.env.STRIPE_PRICE_CHEF_MONTHLY]: 'chef',
-  [process.env.STRIPE_PRICE_CHEF_YEARLY]: 'chef',
-  // Legacy support
-  [process.env.STRIPE_PREMIUM_PRICE_ID]: 'pro',
-};
+const FIREBASE_UID_REGEX = /^[a-zA-Z0-9]{20,128}$/;
+
+/**
+ * Validate Firebase UID format
+ */
+function isValidFirebaseUID(uid) {
+  return uid && typeof uid === 'string' && FIREBASE_UID_REGEX.test(uid);
+}
+
+/**
+ * Get price to tier mapping (lazy-loaded to ensure env vars are available)
+ */
+function getPriceToTierMap() {
+  return {
+    [process.env.STRIPE_PRICE_PRO_MONTHLY]: 'pro',
+    [process.env.STRIPE_PRICE_PRO_YEARLY]: 'pro',
+    [process.env.STRIPE_PRICE_CHEF_MONTHLY]: 'chef',
+    [process.env.STRIPE_PRICE_CHEF_YEARLY]: 'chef',
+    // Legacy support
+    [process.env.STRIPE_PREMIUM_PRICE_ID]: 'pro',
+  };
+}
 
 // Initialize Firebase Admin if not already initialized
 let db;
@@ -124,8 +138,10 @@ function getPlanTierFromSubscription(subscription) {
 
   // Then check the price ID
   const priceId = subscription.items?.data?.[0]?.price?.id;
-  if (priceId && PRICE_TO_TIER[priceId]) {
-    return PRICE_TO_TIER[priceId];
+  const priceToTier = getPriceToTierMap();
+
+  if (priceId && priceToTier[priceId]) {
+    return priceToTier[priceId];
   }
 
   // Default to pro for backwards compatibility
@@ -151,6 +167,11 @@ async function handleCheckoutComplete(session) {
 
   if (!firebaseUID) {
     console.error('No Firebase UID in session metadata');
+    return;
+  }
+
+  if (!isValidFirebaseUID(firebaseUID)) {
+    console.error('Invalid Firebase UID format:', firebaseUID);
     return;
   }
 
@@ -191,6 +212,11 @@ async function handleSubscriptionUpdate(subscription) {
     return;
   }
 
+  if (!isValidFirebaseUID(firebaseUID)) {
+    console.error('Invalid Firebase UID format:', firebaseUID);
+    return;
+  }
+
   const userRef = db.collection('users').doc(firebaseUID);
 
   const status = subscription.status;
@@ -221,6 +247,11 @@ async function handleSubscriptionDeleted(subscription) {
     return;
   }
 
+  if (!isValidFirebaseUID(firebaseUID)) {
+    console.error('Invalid Firebase UID format:', firebaseUID);
+    return;
+  }
+
   const userRef = db.collection('users').doc(firebaseUID);
 
   await userRef.update({
@@ -241,6 +272,11 @@ async function handlePaymentSucceeded(invoice) {
     return;
   }
 
+  if (!isValidFirebaseUID(firebaseUID)) {
+    console.error('Invalid Firebase UID format:', firebaseUID);
+    return;
+  }
+
   const userRef = db.collection('users').doc(firebaseUID);
 
   await userRef.update({
@@ -258,6 +294,11 @@ async function handlePaymentFailed(invoice) {
 
   if (!firebaseUID) {
     console.error('No Firebase UID in customer metadata');
+    return;
+  }
+
+  if (!isValidFirebaseUID(firebaseUID)) {
+    console.error('Invalid Firebase UID format:', firebaseUID);
     return;
   }
 
