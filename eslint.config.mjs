@@ -2,6 +2,15 @@ import reactPlugin from "eslint-plugin-react";
 import nextPlugin from "@next/eslint-plugin-next";
 
 export default [
+    {
+        ignores: [
+            ".next/",
+            "out/",
+            "android/",
+            "ios/",
+            "coverage/",
+        ],
+    },
     reactPlugin.configs.flat["jsx-runtime"],
     nextPlugin.flatConfig.coreWebVitals,
     {
