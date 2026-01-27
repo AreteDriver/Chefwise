@@ -40,7 +40,7 @@ jest.mock('next/server', () => ({
   },
 }))
 
-// Mock next/router
+// Mock next/router (legacy, for any remaining imports)
 jest.mock('next/router', () => ({
   useRouter: jest.fn(() => ({
     push: jest.fn(),
@@ -48,6 +48,21 @@ jest.mock('next/router', () => ({
     query: {},
     asPath: '/',
   })),
+}))
+
+// Mock next/navigation (App Router)
+jest.mock('next/navigation', () => ({
+  useRouter: jest.fn(() => ({
+    push: jest.fn(),
+    back: jest.fn(),
+    replace: jest.fn(),
+    refresh: jest.fn(),
+  })),
+  useParams: jest.fn(() => ({})),
+  useSearchParams: jest.fn(() => ({
+    get: jest.fn(() => null),
+  })),
+  usePathname: jest.fn(() => '/'),
 }))
 
 // Suppress console errors in tests
