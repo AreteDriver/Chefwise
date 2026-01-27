@@ -1,20 +1,13 @@
-/**
- * Generate Recipe API Route
- *
- * NOTE: This route is deprecated in favor of the Firebase Cloud Function
- * `generateRecipe`. Use httpsCallable(functions, 'generateRecipe') instead.
- *
- * This route is kept for backwards compatibility but should be migrated.
- */
-
 import OpenAI from 'openai';
 import { withAuth } from '@/middleware/withAuth';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let _openai;
+function getOpenAI() {
+  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return _openai;
+}
 
-async function handler(req, res) {
+export async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -26,7 +19,7 @@ async function handler(req, res) {
   }
 
   try {
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
         {
@@ -42,18 +35,15 @@ async function handler(req, res) {
     });
 
     let recipeText = completion.choices[0].message.content.trim();
-
-    // Remove markdown code blocks if present
     recipeText = recipeText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
 
     const recipe = JSON.parse(recipeText);
 
-    res.status(200).json({ recipe });
+    return res.status(200).json({ recipe });
   } catch (error) {
     console.error('OpenAI Error:', error);
-    res.status(500).json({ error: 'Failed to generate recipe' });
+    return res.status(500).json({ error: 'Failed to generate recipe' });
   }
 }
 
-// Require authentication - users must be signed in to generate recipes
 export default withAuth(handler);

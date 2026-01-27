@@ -54,7 +54,7 @@ jest.mock('firebase-admin', () => {
 });
 
 // Import handler after mocks are set up
-import handler, { config } from '@/pages/api/stripe/webhook';
+import handler, { config } from '@/app/api/stripe/webhook/handler';
 
 describe('Stripe Webhook Handler', () => {
   let mockReq;

@@ -33,6 +33,13 @@ jest.mock('firebase/functions', () => ({
   connectFunctionsEmulator: jest.fn(),
 }))
 
+// Mock next/server for App Router route handlers
+jest.mock('next/server', () => ({
+  NextResponse: {
+    json: jest.fn((data, options) => ({ data, status: options?.status || 200 })),
+  },
+}))
+
 // Mock next/router
 jest.mock('next/router', () => ({
   useRouter: jest.fn(() => ({

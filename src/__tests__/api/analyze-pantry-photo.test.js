@@ -1,4 +1,4 @@
-import handler from '@/pages/api/analyze-pantry-photo';
+import handler from '@/app/api/analyze-pantry-photo/handler';
 
 // Mock object to avoid Jest hoisting issues
 const mocks = {

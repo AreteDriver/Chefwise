@@ -1,17 +1,17 @@
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let _openai;
+function getOpenAI() {
+  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return _openai;
+}
 
 // Rate limit tracking (in-memory, resets on server restart)
-// For production, use Redis or similar persistent store
 const rateLimits = new Map();
-const FREE_TIER_LIMIT = 2; // 2 scans per day for free users
-const RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
+const FREE_TIER_LIMIT = 2;
+const RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 function checkRateLimit(userId, isPremium) {
-  // Premium users have unlimited scans
   if (isPremium) return { allowed: true };
 
   const now = Date.now();
@@ -19,7 +19,6 @@ function checkRateLimit(userId, isPremium) {
   const userData = rateLimits.get(userKey);
 
   if (!userData || now - userData.windowStart > RATE_LIMIT_WINDOW_MS) {
-    // New window
     rateLimits.set(userKey, { count: 1, windowStart: now });
     return { allowed: true, remaining: FREE_TIER_LIMIT - 1 };
   }
@@ -51,7 +50,6 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Valid image MIME type is required' });
   }
 
-  // Check rate limit
   if (userId) {
     const rateCheck = checkRateLimit(userId, isPremium);
     if (!rateCheck.allowed) {
@@ -63,7 +61,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: 'gpt-4o',
       messages: [
         {
@@ -103,11 +101,8 @@ Example output format:
     });
 
     let responseText = completion.choices[0].message.content.trim();
-
-    // Remove markdown code blocks if present
     responseText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
 
-    // Parse the JSON response
     let items;
     try {
       items = JSON.parse(responseText);
@@ -118,14 +113,12 @@ Example output format:
       });
     }
 
-    // Validate the response structure
     if (!Array.isArray(items)) {
       return res.status(500).json({
         error: 'Invalid response format from image analysis.',
       });
     }
 
-    // Normalize and validate each item
     const validCategories = ['Protein', 'Vegetables', 'Fruits', 'Grains', 'Dairy', 'Spices', 'Other'];
     const normalizedItems = items
       .filter((item) => item && typeof item.name === 'string' && item.name.trim())
@@ -136,11 +129,10 @@ Example output format:
         category: validCategories.includes(item.category) ? item.category : 'Other',
       }));
 
-    res.status(200).json({ items: normalizedItems });
+    return res.status(200).json({ items: normalizedItems });
   } catch (error) {
     console.error('OpenAI Vision Error:', error);
 
-    // Handle specific error types
     if (error.code === 'invalid_api_key') {
       return res.status(500).json({ error: 'API configuration error' });
     }
@@ -151,11 +143,10 @@ Example output format:
       });
     }
 
-    res.status(500).json({ error: 'Failed to analyze image. Please try again.' });
+    return res.status(500).json({ error: 'Failed to analyze image. Please try again.' });
   }
 }
 
-// Increase body size limit for base64 images
 export const config = {
   api: {
     bodyParser: {

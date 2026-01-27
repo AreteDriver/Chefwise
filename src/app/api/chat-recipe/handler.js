@@ -1,15 +1,11 @@
-/**
- * Chat Recipe API Route
- *
- * Provides conversational recipe assistance powered by OpenAI.
- */
-
 import OpenAI from 'openai';
 import { withAuth } from '@/middleware/withAuth';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let _openai;
+function getOpenAI() {
+  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return _openai;
+}
 
 const SYSTEM_PROMPT = `You are ChefWise, an enthusiastic and helpful AI cooking assistant. You help people discover recipes, answer cooking questions, and provide meal suggestions.
 
@@ -28,7 +24,7 @@ When someone asks about recipes:
 
 Keep responses concise but helpful. Use emojis occasionally to be friendly.`;
 
-async function handler(req, res) {
+export async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -40,7 +36,7 @@ async function handler(req, res) {
   }
 
   try {
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
@@ -52,12 +48,11 @@ async function handler(req, res) {
 
     const message = completion.choices[0].message.content;
 
-    res.status(200).json({ message });
+    return res.status(200).json({ message });
   } catch (error) {
     console.error('OpenAI Error:', error);
-    res.status(500).json({ error: 'Failed to get response' });
+    return res.status(500).json({ error: 'Failed to get response' });
   }
 }
 
-// Require authentication - users must be signed in to use chat
 export default withAuth(handler);

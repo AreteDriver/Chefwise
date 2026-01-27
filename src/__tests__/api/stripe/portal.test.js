@@ -1,4 +1,4 @@
-import handler from '@/pages/api/stripe/portal';
+import handler from '@/app/api/stripe/portal/handler';
 
 // Mock object to avoid Jest hoisting issues
 const mocks = {

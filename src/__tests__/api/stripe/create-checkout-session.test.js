@@ -1,4 +1,4 @@
-import handler from '@/pages/api/stripe/create-checkout-session';
+import handler from '@/app/api/stripe/create-checkout-session/handler';
 
 // Mock object to avoid Jest hoisting issues
 const mocks = {

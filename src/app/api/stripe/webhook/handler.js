@@ -2,31 +2,24 @@ import Stripe from 'stripe';
 import { buffer } from 'micro';
 import admin from 'firebase-admin';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+let _stripe;
+function getStripe() {
+  if (!_stripe) _stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  return _stripe;
+}
 
-/**
- * Firebase UID validation regex
- * UIDs are typically 20-128 alphanumeric characters
- */
 const FIREBASE_UID_REGEX = /^[a-zA-Z0-9]{20,128}$/;
 
-/**
- * Validate Firebase UID format
- */
 function isValidFirebaseUID(uid) {
   return uid && typeof uid === 'string' && FIREBASE_UID_REGEX.test(uid);
 }
 
-/**
- * Get price to tier mapping (lazy-loaded to ensure env vars are available)
- */
 function getPriceToTierMap() {
   return {
     [process.env.STRIPE_PRICE_PRO_MONTHLY]: 'pro',
     [process.env.STRIPE_PRICE_PRO_YEARLY]: 'pro',
     [process.env.STRIPE_PRICE_CHEF_MONTHLY]: 'chef',
     [process.env.STRIPE_PRICE_CHEF_YEARLY]: 'chef',
-    // Legacy support
     [process.env.STRIPE_PREMIUM_PRICE_ID]: 'pro',
   };
 }
@@ -48,19 +41,19 @@ try {
   console.error('Firebase admin initialization error:', error);
 }
 
-// Disable body parser for webhook
+// Disable body parser for webhook (Pages Router compat)
 export const config = {
   api: {
     bodyParser: false,
   },
 };
 
+// Pages Router compatible handler (used by tests)
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Check if Firebase Admin is initialized
   if (!db) {
     console.error('Firebase Admin not initialized - cannot process webhook');
     return res.status(500).json({ error: 'Server configuration error' });
@@ -72,7 +65,7 @@ export default async function handler(req, res) {
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(
+    event = getStripe().webhooks.constructEvent(
       buf,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
@@ -82,61 +75,58 @@ export default async function handler(req, res) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Handle the event
   try {
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object;
-        await handleCheckoutComplete(session);
-        break;
-      }
-
-      case 'customer.subscription.created':
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object;
-        await handleSubscriptionUpdate(subscription);
-        break;
-      }
-
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object;
-        await handleSubscriptionDeleted(subscription);
-        break;
-      }
-
-      case 'invoice.payment_succeeded': {
-        const invoice = event.data.object;
-        await handlePaymentSucceeded(invoice);
-        break;
-      }
-
-      case 'invoice.payment_failed': {
-        const invoice = event.data.object;
-        await handlePaymentFailed(invoice);
-        break;
-      }
-
-      default:
-        console.log(`Unhandled event type ${event.type}`);
-    }
-
-    res.status(200).json({ received: true });
+    await processWebhookEvent(event);
+    return res.status(200).json({ received: true });
   } catch (error) {
     console.error('Error handling webhook:', error);
-    res.status(500).json({ error: 'Webhook handler failed' });
+    return res.status(500).json({ error: 'Webhook handler failed' });
   }
 }
 
-/**
- * Determine plan tier from subscription price
- */
+export async function processWebhookEvent(event) {
+  switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object;
+      await handleCheckoutComplete(session);
+      break;
+    }
+
+    case 'customer.subscription.created':
+    case 'customer.subscription.updated': {
+      const subscription = event.data.object;
+      await handleSubscriptionUpdate(subscription);
+      break;
+    }
+
+    case 'customer.subscription.deleted': {
+      const subscription = event.data.object;
+      await handleSubscriptionDeleted(subscription);
+      break;
+    }
+
+    case 'invoice.payment_succeeded': {
+      const invoice = event.data.object;
+      await handlePaymentSucceeded(invoice);
+      break;
+    }
+
+    case 'invoice.payment_failed': {
+      const invoice = event.data.object;
+      await handlePaymentFailed(invoice);
+      break;
+    }
+
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+}
+
 function getPlanTierFromSubscription(subscription) {
-  // First check subscription metadata
   if (subscription.metadata?.planTier) {
     return subscription.metadata.planTier;
   }
 
-  // Then check the price ID
   const priceId = subscription.items?.data?.[0]?.price?.id;
   const priceToTier = getPriceToTierMap();
 
@@ -144,20 +134,14 @@ function getPlanTierFromSubscription(subscription) {
     return priceToTier[priceId];
   }
 
-  // Default to pro for backwards compatibility
   return 'pro';
 }
 
-/**
- * Determine billing period from subscription
- */
 function getBillingPeriod(subscription) {
-  // Check metadata first
   if (subscription.metadata?.billingPeriod) {
     return subscription.metadata.billingPeriod;
   }
 
-  // Determine from interval
   const interval = subscription.items?.data?.[0]?.price?.recurring?.interval;
   return interval === 'year' ? 'yearly' : 'monthly';
 }
@@ -175,13 +159,12 @@ async function handleCheckoutComplete(session) {
     return;
   }
 
-  // Get the subscription to determine the plan tier
   let planTier = session.metadata?.planTier || 'pro';
   let billingPeriod = session.metadata?.billingPeriod || 'monthly';
 
   if (session.subscription) {
     try {
-      const subscription = await stripe.subscriptions.retrieve(session.subscription);
+      const subscription = await getStripe().subscriptions.retrieve(session.subscription);
       planTier = getPlanTierFromSubscription(subscription);
       billingPeriod = getBillingPeriod(subscription);
     } catch (err) {
@@ -204,7 +187,7 @@ async function handleCheckoutComplete(session) {
 }
 
 async function handleSubscriptionUpdate(subscription) {
-  const customer = await stripe.customers.retrieve(subscription.customer);
+  const customer = await getStripe().customers.retrieve(subscription.customer);
   const firebaseUID = customer.metadata?.firebaseUID || subscription.metadata?.firebaseUID;
 
   if (!firebaseUID) {
@@ -222,7 +205,6 @@ async function handleSubscriptionUpdate(subscription) {
   const status = subscription.status;
   const isActive = status === 'active' || status === 'trialing';
 
-  // Determine plan tier from subscription
   const planTier = isActive ? getPlanTierFromSubscription(subscription) : 'free';
   const billingPeriod = getBillingPeriod(subscription);
 
@@ -239,7 +221,7 @@ async function handleSubscriptionUpdate(subscription) {
 }
 
 async function handleSubscriptionDeleted(subscription) {
-  const customer = await stripe.customers.retrieve(subscription.customer);
+  const customer = await getStripe().customers.retrieve(subscription.customer);
   const firebaseUID = customer.metadata?.firebaseUID || subscription.metadata?.firebaseUID;
 
   if (!firebaseUID) {
@@ -264,7 +246,7 @@ async function handleSubscriptionDeleted(subscription) {
 }
 
 async function handlePaymentSucceeded(invoice) {
-  const customer = await stripe.customers.retrieve(invoice.customer);
+  const customer = await getStripe().customers.retrieve(invoice.customer);
   const firebaseUID = customer.metadata?.firebaseUID;
 
   if (!firebaseUID) {
@@ -289,7 +271,7 @@ async function handlePaymentSucceeded(invoice) {
 }
 
 async function handlePaymentFailed(invoice) {
-  const customer = await stripe.customers.retrieve(invoice.customer);
+  const customer = await getStripe().customers.retrieve(invoice.customer);
   const firebaseUID = customer.metadata?.firebaseUID;
 
   if (!firebaseUID) {
