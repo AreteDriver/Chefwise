@@ -1,5 +1,7 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import MainLayout from '@/components/MainLayout';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -10,16 +12,19 @@ import {
   BILLING_PERIODS,
 } from '@/utils/subscriptionConstants';
 import { trackUpgradeClick } from '@/utils/analytics';
+import { useAuth } from '@/app/providers';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
-export default function UpgradePage({ user }) {
+export default function UpgradePage() {
+  const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const subscription = useSubscription();
   const [loading, setLoading] = useState(null); // Track which plan is loading
   const [error, setError] = useState(null);
   const [billingPeriod, setBillingPeriod] = useState(BILLING_PERIODS.MONTHLY);
-  const { canceled } = router.query;
+  const canceled = searchParams.get('canceled');
 
   useEffect(() => {
     if (!user) {

@@ -1,10 +1,14 @@
-import { useRouter } from 'next/router';
+'use client';
+
+import { useRouter } from 'next/navigation';
 import TabLayout from '@/components/TabLayout';
 import PantryInventory from '@/components/PantryInventory';
 import MainLayout from '@/components/MainLayout';
 import useOpenAI from '@/hooks/useOpenAI';
+import { useAuth } from '@/app/providers';
 
-export default function PantryPage({ user }) {
+export default function PantryPage() {
+  const { user } = useAuth();
   const router = useRouter();
   const { generateRecipe } = useOpenAI();
 

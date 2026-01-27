@@ -1,12 +1,16 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '@/firebase/firebaseConfig';
 import { DIET_FILTERS } from '@/prompts/recipePrompts';
 import MainLayout from '@/components/MainLayout';
+import { useAuth } from '@/app/providers';
 
-export default function ProfilePage({ user }) {
+export default function ProfilePage() {
+  const { user } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);

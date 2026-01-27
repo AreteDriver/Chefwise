@@ -1,11 +1,15 @@
+'use client';
+
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import MealPlanner from '@/components/MealPlanner';
 import MainLayout from '@/components/MainLayout';
 import useOpenAI from '@/hooks/useOpenAI';
 import { useNetworkStatus } from '@/contexts/NetworkStatusContext';
+import { useAuth } from '@/app/providers';
 
-export default function PlannerPage({ user }) {
+export default function PlannerPage() {
+  const { user } = useAuth();
   const router = useRouter();
   const [mealPlan, setMealPlan] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -73,7 +77,7 @@ export default function PlannerPage({ user }) {
         {showForm && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h3 className="text-xl font-semibold mb-4">Meal Plan Settings</h3>
-            
+
             <div className="grid md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

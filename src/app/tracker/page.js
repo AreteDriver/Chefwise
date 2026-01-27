@@ -1,10 +1,14 @@
+'use client';
+
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import TabLayout from '@/components/TabLayout';
 import MacroTracker from '@/components/MacroTracker';
 import MainLayout from '@/components/MainLayout';
+import { useAuth } from '@/app/providers';
 
-export default function TrackerPage({ user }) {
+export default function TrackerPage() {
+  const { user } = useAuth();
   const router = useRouter();
   const [dailyMacros] = useState({
     calories: 1650,

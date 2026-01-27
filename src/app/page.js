@@ -1,11 +1,15 @@
+'use client';
+
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/firebase/firebaseConfig';
 import MainLayout from '@/components/MainLayout';
+import { useAuth } from '@/app/providers';
 
-export default function Home({ user }) {
+export default function Home() {
+  const { user } = useAuth();
   const router = useRouter();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -15,7 +19,7 @@ export default function Home({ user }) {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      
+
       const userDoc = await getDoc(doc(db, 'users', result.user.uid));
       if (!userDoc.exists()) {
         await setDoc(doc(db, 'users', result.user.uid), {
@@ -52,15 +56,15 @@ export default function Home({ user }) {
       });
 
       const data = await response.json();
-      
+
       if (data.message) {
         setMessages([...updatedMessages, { role: 'assistant', content: data.message }]);
       }
     } catch (err) {
       console.error(err);
-      setMessages([...updatedMessages, { 
-        role: 'assistant', 
-        content: 'Sorry, I encountered an error. Please try again.' 
+      setMessages([...updatedMessages, {
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.'
       }]);
     } finally {
       setLoading(false);
@@ -114,7 +118,7 @@ export default function Home({ user }) {
                   </div>
                 </div>
               )}
-              
+
               {messages.map((msg, idx) => (
                 <div
                   key={idx}

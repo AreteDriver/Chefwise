@@ -1,5 +1,7 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { PLAN_LIMITS, PLAN_TIERS } from '@/utils/SubscriptionGate';
 import { SUBSCRIPTION_PLANS, PLAN_FEATURES } from '@/utils/subscriptionConstants';
@@ -8,13 +10,17 @@ import {
   trackPortalAccess,
   trackSubscriptionSuccess,
 } from '@/utils/analytics';
+import { useAuth } from '@/app/providers';
 
-export default function SubscriptionPage({ user }) {
+export default function SubscriptionPage() {
+  const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const subscription = useSubscription();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { success, session_id } = router.query;
+  const success = searchParams.get('success');
+  const session_id = searchParams.get('session_id');
 
   useEffect(() => {
     if (!user) {

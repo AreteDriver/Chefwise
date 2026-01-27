@@ -1,11 +1,15 @@
+'use client';
+
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/MainLayout';
 import RecipeCard from '@/components/RecipeCard';
 import { getUserRecipes, searchRecipes, deleteRecipe } from '@/utils/offline/recipeService';
 import { useNetworkStatus } from '@/contexts/NetworkStatusContext';
+import { useAuth } from '@/app/providers';
 
-export default function RecipesPage({ user }) {
+export default function RecipesPage() {
+  const { user } = useAuth();
   const router = useRouter();
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
