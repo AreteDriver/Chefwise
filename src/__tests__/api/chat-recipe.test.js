@@ -3,7 +3,7 @@ jest.mock('@/middleware/withAuth', () => ({
   withAuth: (handler) => handler,
 }));
 
-import handler from '@/pages/api/chat-recipe';
+import { handler } from '@/app/api/chat-recipe/handler';
 
 // Mock object to avoid Jest hoisting issues
 const mocks = {
