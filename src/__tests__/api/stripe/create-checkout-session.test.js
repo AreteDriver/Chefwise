@@ -4,6 +4,7 @@ import handler from '@/pages/api/stripe/create-checkout-session';
 const mocks = {
   customersList: jest.fn(),
   customersCreate: jest.fn(),
+  customersUpdate: jest.fn(),
   checkoutSessionsCreate: jest.fn(),
 };
 
@@ -12,6 +13,7 @@ jest.mock('stripe', () => {
     customers: {
       list: (...args) => mocks.customersList(...args),
       create: (...args) => mocks.customersCreate(...args),
+      update: (...args) => mocks.customersUpdate(...args),
     },
     checkout: {
       sessions: {
@@ -24,9 +26,11 @@ jest.mock('stripe', () => {
 describe('create-checkout-session API', () => {
   let req;
   let res;
+  const originalEnv = process.env;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    process.env = { ...originalEnv, STRIPE_PREMIUM_PRICE_ID: 'price_test_legacy' };
 
     req = {
       method: 'POST',
@@ -37,6 +41,10 @@ describe('create-checkout-session API', () => {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis(),
     };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
   });
 
   describe('Method validation', () => {
@@ -99,10 +107,11 @@ describe('create-checkout-session API', () => {
       req.body = {
         userId: 'user123',
         userEmail: 'test@example.com',
+        priceId: 'price_test',
       };
 
       mocks.customersList.mockResolvedValue({
-        data: [{ id: 'cus_existing' }],
+        data: [{ id: 'cus_existing', metadata: { firebaseUID: 'user123' } }],
       });
 
       mocks.checkoutSessionsCreate.mockResolvedValue({
@@ -122,10 +131,11 @@ describe('create-checkout-session API', () => {
       req.body = {
         userId: 'user123',
         userEmail: 'test@example.com',
+        priceId: 'price_test',
       };
 
       mocks.customersList.mockResolvedValue({
-        data: [{ id: 'cus_existing' }],
+        data: [{ id: 'cus_existing', metadata: { firebaseUID: 'user123' } }],
       });
 
       mocks.checkoutSessionsCreate.mockResolvedValue({
@@ -147,6 +157,7 @@ describe('create-checkout-session API', () => {
       req.body = {
         userId: 'user123',
         userEmail: 'test@example.com',
+        priceId: 'price_test',
       };
 
       mocks.customersList.mockResolvedValue({
@@ -176,6 +187,7 @@ describe('create-checkout-session API', () => {
       req.body = {
         userId: 'user123',
         userEmail: 'test@example.com',
+        priceId: 'price_test',
       };
 
       mocks.customersList.mockResolvedValue({
@@ -204,7 +216,7 @@ describe('create-checkout-session API', () => {
   describe('Checkout session creation', () => {
     beforeEach(() => {
       mocks.customersList.mockResolvedValue({
-        data: [{ id: 'cus_test' }],
+        data: [{ id: 'cus_test', metadata: { firebaseUID: 'user123' } }],
       });
     });
 
@@ -212,6 +224,7 @@ describe('create-checkout-session API', () => {
       req.body = {
         userId: 'user123',
         userEmail: 'test@example.com',
+        priceId: 'price_test',
       };
 
       mocks.checkoutSessionsCreate.mockResolvedValue({
@@ -232,6 +245,7 @@ describe('create-checkout-session API', () => {
       req.body = {
         userId: 'user123',
         userEmail: 'test@example.com',
+        priceId: 'price_test',
       };
 
       mocks.checkoutSessionsCreate.mockResolvedValue({
@@ -252,6 +266,7 @@ describe('create-checkout-session API', () => {
       req.body = {
         userId: 'user123',
         userEmail: 'test@example.com',
+        priceId: 'price_test',
       };
 
       mocks.checkoutSessionsCreate.mockResolvedValue({
@@ -298,6 +313,7 @@ describe('create-checkout-session API', () => {
       req.body = {
         userId: 'user123',
         userEmail: 'test@example.com',
+        priceId: 'price_test',
       };
 
       mocks.checkoutSessionsCreate.mockResolvedValue({
@@ -309,9 +325,9 @@ describe('create-checkout-session API', () => {
 
       expect(mocks.checkoutSessionsCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          metadata: {
+          metadata: expect.objectContaining({
             firebaseUID: 'user123',
-          },
+          }),
         })
       );
     });
@@ -320,6 +336,7 @@ describe('create-checkout-session API', () => {
       req.body = {
         userId: 'user123',
         userEmail: 'test@example.com',
+        priceId: 'price_test',
       };
 
       mocks.checkoutSessionsCreate.mockResolvedValue({
@@ -340,6 +357,7 @@ describe('create-checkout-session API', () => {
       req.body = {
         userId: 'user123',
         userEmail: 'test@example.com',
+        priceId: 'price_test',
       };
 
       mocks.checkoutSessionsCreate.mockResolvedValue({
@@ -360,7 +378,7 @@ describe('create-checkout-session API', () => {
   describe('Error handling', () => {
     beforeEach(() => {
       mocks.customersList.mockResolvedValue({
-        data: [{ id: 'cus_test' }],
+        data: [{ id: 'cus_test', metadata: { firebaseUID: 'user123' } }],
       });
     });
 
@@ -368,6 +386,7 @@ describe('create-checkout-session API', () => {
       req.body = {
         userId: 'user123',
         userEmail: 'test@example.com',
+        priceId: 'price_test',
       };
 
       mocks.customersList.mockRejectedValue(new Error('Stripe error'));
@@ -381,6 +400,7 @@ describe('create-checkout-session API', () => {
       req.body = {
         userId: 'user123',
         userEmail: 'test@example.com',
+        priceId: 'price_test',
       };
 
       mocks.checkoutSessionsCreate.mockRejectedValue(new Error('Stripe error'));
@@ -394,6 +414,7 @@ describe('create-checkout-session API', () => {
       req.body = {
         userId: 'user123',
         userEmail: 'test@example.com',
+        priceId: 'price_test',
       };
 
       mocks.checkoutSessionsCreate.mockRejectedValue(new Error('Invalid price ID'));
@@ -408,6 +429,7 @@ describe('create-checkout-session API', () => {
       req.body = {
         userId: 'user123',
         userEmail: 'test@example.com',
+        priceId: 'price_test',
       };
 
       const error = new Error('Test error');

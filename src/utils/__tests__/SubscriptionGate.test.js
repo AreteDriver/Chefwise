@@ -30,8 +30,16 @@ describe('SubscriptionGate', () => {
       expect(PLAN_TIERS.FREE).toBe('free');
     });
 
-    it('should define PREMIUM tier', () => {
-      expect(PLAN_TIERS.PREMIUM).toBe('premium');
+    it('should define PRO tier', () => {
+      expect(PLAN_TIERS.PRO).toBe('pro');
+    });
+
+    it('should define CHEF tier', () => {
+      expect(PLAN_TIERS.CHEF).toBe('chef');
+    });
+
+    it('should alias PREMIUM to pro', () => {
+      expect(PLAN_TIERS.PREMIUM).toBe('pro');
     });
   });
 
@@ -46,14 +54,24 @@ describe('SubscriptionGate', () => {
       expect(freeLimits.savedRecipes).toBe(10);
     });
 
-    it('should define premium tier limits', () => {
-      const premiumLimits = PLAN_LIMITS[PLAN_TIERS.PREMIUM];
+    it('should define pro tier limits', () => {
+      const proLimits = PLAN_LIMITS[PLAN_TIERS.PRO];
 
-      expect(premiumLimits.recipesPerDay).toBe(Infinity);
-      expect(premiumLimits.dietFilters).toBe(Infinity);
-      expect(premiumLimits.mealPlanDays).toBe(30);
-      expect(premiumLimits.pantryItems).toBe(Infinity);
-      expect(premiumLimits.savedRecipes).toBe(Infinity);
+      expect(proLimits.recipesPerDay).toBe(Infinity);
+      expect(proLimits.dietFilters).toBe(Infinity);
+      expect(proLimits.mealPlanDays).toBe(14);
+      expect(proLimits.pantryItems).toBe(Infinity);
+      expect(proLimits.savedRecipes).toBe(Infinity);
+    });
+
+    it('should define chef tier limits', () => {
+      const chefLimits = PLAN_LIMITS[PLAN_TIERS.CHEF];
+
+      expect(chefLimits.recipesPerDay).toBe(Infinity);
+      expect(chefLimits.dietFilters).toBe(Infinity);
+      expect(chefLimits.mealPlanDays).toBe(30);
+      expect(chefLimits.pantryItems).toBe(Infinity);
+      expect(chefLimits.savedRecipes).toBe(Infinity);
     });
   });
 
@@ -221,10 +239,23 @@ describe('SubscriptionGate', () => {
         expect(result.maxDays).toBe(3);
       });
 
-      it('should return max days for premium user', async () => {
+      it('should return max days for pro user', async () => {
         getDoc.mockResolvedValue(
           mockUserDoc({
-            planTier: PLAN_TIERS.PREMIUM,
+            planTier: PLAN_TIERS.PRO,
+          })
+        );
+
+        const result = await checkPlanTier('user123', 'mealPlan');
+
+        expect(result.allowed).toBe(true);
+        expect(result.maxDays).toBe(14);
+      });
+
+      it('should return max days for chef user', async () => {
+        getDoc.mockResolvedValue(
+          mockUserDoc({
+            planTier: PLAN_TIERS.CHEF,
           })
         );
 

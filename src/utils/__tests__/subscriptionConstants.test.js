@@ -3,26 +3,32 @@ import { SUBSCRIPTION_PLANS, PLAN_FEATURES } from '../subscriptionConstants';
 describe('subscriptionConstants', () => {
   describe('SUBSCRIPTION_PLANS', () => {
     it('should define FREE plan', () => {
-      expect(SUBSCRIPTION_PLANS.FREE).toEqual({
-        name: 'Free',
-        price: 0,
-        displayPrice: '$0',
-        period: 'forever',
-      });
+      expect(SUBSCRIPTION_PLANS.FREE).toEqual(
+        expect.objectContaining({
+          id: 'free',
+          name: 'Free',
+          price: { monthly: 0, yearly: 0 },
+          displayPrice: { monthly: '$0', yearly: '$0' },
+          period: 'forever',
+        })
+      );
     });
 
-    it('should define PREMIUM plan', () => {
-      expect(SUBSCRIPTION_PLANS.PREMIUM).toEqual({
-        name: 'Premium',
-        price: 9,
-        displayPrice: '$9',
-        period: '/month',
-      });
+    it('should define PRO plan', () => {
+      expect(SUBSCRIPTION_PLANS.PRO).toEqual(
+        expect.objectContaining({
+          id: 'pro',
+          name: 'Pro',
+          price: { monthly: 9, yearly: 79 },
+          displayPrice: { monthly: '$9', yearly: '$79' },
+          period: '/month',
+        })
+      );
     });
 
     it('should have numeric price values', () => {
-      expect(typeof SUBSCRIPTION_PLANS.FREE.price).toBe('number');
-      expect(typeof SUBSCRIPTION_PLANS.PREMIUM.price).toBe('number');
+      expect(typeof SUBSCRIPTION_PLANS.FREE.price.monthly).toBe('number');
+      expect(typeof SUBSCRIPTION_PLANS.PRO.price.monthly).toBe('number');
     });
   });
 
@@ -37,8 +43,8 @@ describe('subscriptionConstants', () => {
       expect(PLAN_FEATURES.PREMIUM.length).toBeGreaterThan(0);
     });
 
-    it('should have more premium features than free', () => {
-      expect(PLAN_FEATURES.PREMIUM.length).toBeGreaterThan(PLAN_FEATURES.FREE.length);
+    it('should have more pro features than free', () => {
+      expect(PLAN_FEATURES.PRO.length).toBeGreaterThan(PLAN_FEATURES.FREE.length);
     });
 
     it('should include key free features', () => {
@@ -48,11 +54,18 @@ describe('subscriptionConstants', () => {
       expect(freeFeatures).toContain('3-day meal plans');
     });
 
-    it('should include key premium features', () => {
-      const premiumFeatures = PLAN_FEATURES.PREMIUM.join(' ');
-      expect(premiumFeatures).toContain('Unlimited');
-      expect(premiumFeatures).toContain('30-day meal plans');
-      expect(premiumFeatures).toContain('No ads');
+    it('should include key pro features', () => {
+      const proFeatures = PLAN_FEATURES.PRO.join(' ');
+      expect(proFeatures).toContain('Unlimited');
+      expect(proFeatures).toContain('14-day meal plans');
+      expect(proFeatures).toContain('No ads');
+    });
+
+    it('should include key chef features', () => {
+      const chefFeatures = PLAN_FEATURES.CHEF.join(' ');
+      expect(chefFeatures).toContain('30-day meal plans');
+      expect(chefFeatures).toContain('Priority AI');
+      expect(chefFeatures).toContain('API access');
     });
   });
 });

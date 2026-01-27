@@ -9,6 +9,7 @@ const mocks = {
   collection: jest.fn(),
   constructEvent: jest.fn(),
   customersRetrieve: jest.fn(),
+  subscriptionsRetrieve: jest.fn(),
 };
 
 // Mock Stripe - use function to access mocks object
@@ -19,6 +20,9 @@ jest.mock('stripe', () => {
     },
     customers: {
       retrieve: (...args) => mocks.customersRetrieve(...args),
+    },
+    subscriptions: {
+      retrieve: (...args) => mocks.subscriptionsRetrieve(...args),
     },
   }));
 });
@@ -63,6 +67,10 @@ describe('Stripe Webhook Handler', () => {
     mocks.collection.mockReturnValue({ doc: mocks.doc });
     mocks.doc.mockReturnValue({ update: mocks.update });
     mocks.update.mockResolvedValue();
+    mocks.subscriptionsRetrieve.mockResolvedValue({
+      items: { data: [] },
+      metadata: {},
+    });
 
     mockReq = {
       method: 'POST',
@@ -125,7 +133,7 @@ describe('Stripe Webhook Handler', () => {
         type: 'checkout.session.completed',
         data: {
           object: {
-            metadata: { firebaseUID: 'user123' },
+            metadata: { firebaseUID: 'user123abcdefghijklmno' },
             customer: 'cus_123',
             subscription: 'sub_123',
           },
@@ -135,10 +143,10 @@ describe('Stripe Webhook Handler', () => {
       await handler(mockReq, mockRes);
 
       expect(mocks.collection).toHaveBeenCalledWith('users');
-      expect(mocks.doc).toHaveBeenCalledWith('user123');
+      expect(mocks.doc).toHaveBeenCalledWith('user123abcdefghijklmno');
       expect(mocks.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          planTier: 'premium',
+          planTier: 'pro',
           stripeCustomerId: 'cus_123',
           stripeSubscriptionId: 'sub_123',
           subscriptionStatus: 'active',
@@ -181,7 +189,7 @@ describe('Stripe Webhook Handler', () => {
       });
 
       mocks.customersRetrieve.mockResolvedValue({
-        metadata: { firebaseUID: 'user123' },
+        metadata: { firebaseUID: 'user123abcdefghijklmno' },
       });
 
       await handler(mockReq, mockRes);
@@ -189,7 +197,7 @@ describe('Stripe Webhook Handler', () => {
       expect(mocks.customersRetrieve).toHaveBeenCalledWith('cus_123');
       expect(mocks.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          planTier: 'premium',
+          planTier: 'pro',
           subscriptionStatus: 'active',
           stripeSubscriptionId: 'sub_123',
         })
@@ -211,14 +219,14 @@ describe('Stripe Webhook Handler', () => {
       });
 
       mocks.customersRetrieve.mockResolvedValue({
-        metadata: { firebaseUID: 'user123' },
+        metadata: { firebaseUID: 'user123abcdefghijklmno' },
       });
 
       await handler(mockReq, mockRes);
 
       expect(mocks.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          planTier: 'premium',
+          planTier: 'pro',
           subscriptionStatus: 'trialing',
         })
       );
@@ -240,7 +248,7 @@ describe('Stripe Webhook Handler', () => {
       });
 
       mocks.customersRetrieve.mockResolvedValue({
-        metadata: { firebaseUID: 'user123' },
+        metadata: { firebaseUID: 'user123abcdefghijklmno' },
       });
 
       await handler(mockReq, mockRes);
@@ -288,7 +296,7 @@ describe('Stripe Webhook Handler', () => {
       });
 
       mocks.customersRetrieve.mockResolvedValue({
-        metadata: { firebaseUID: 'user123' },
+        metadata: { firebaseUID: 'user123abcdefghijklmno' },
       });
 
       await handler(mockReq, mockRes);
@@ -335,7 +343,7 @@ describe('Stripe Webhook Handler', () => {
       });
 
       mocks.customersRetrieve.mockResolvedValue({
-        metadata: { firebaseUID: 'user123' },
+        metadata: { firebaseUID: 'user123abcdefghijklmno' },
       });
 
       await handler(mockReq, mockRes);
@@ -361,7 +369,7 @@ describe('Stripe Webhook Handler', () => {
       });
 
       mocks.customersRetrieve.mockResolvedValue({
-        metadata: { firebaseUID: 'user123' },
+        metadata: { firebaseUID: 'user123abcdefghijklmno' },
       });
 
       await handler(mockReq, mockRes);
@@ -395,7 +403,7 @@ describe('Stripe Webhook Handler', () => {
         type: 'checkout.session.completed',
         data: {
           object: {
-            metadata: { firebaseUID: 'user123' },
+            metadata: { firebaseUID: 'user123abcdefghijklmno' },
             customer: 'cus_123',
           },
         },
