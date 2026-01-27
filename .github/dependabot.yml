@@ -11,6 +11,13 @@ updates:
       - "javascript"
     commit-message:
       prefix: "deps"
+    ignore:
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint-config-next"
+        update-types: ["version-update:semver-major"]
     groups:
       npm-minor:
         update-types:
