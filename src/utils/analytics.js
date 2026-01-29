@@ -154,6 +154,18 @@ export const trackSearch = (query, resultCount) => {
 };
 
 /**
+ * Track upgrade button clicks
+ * @param {string} planName - Plan name
+ * @param {string} price - Plan price
+ */
+export const trackUpgradeClick = (planName, price) => {
+  logEvent('upgrade_click', {
+    plan_name: planName,
+    price: price,
+  });
+};
+
+/**
  * Track errors
  * @param {Error} error - Error object
  * @param {string} context - Error context
@@ -244,6 +256,7 @@ const analyticsUtils = {
   trackPortalAccess,
   trackSubscriptionSuccess,
   trackSearch,
+  trackUpgradeClick,
   trackError,
   trackEngagement,
   trackFeatureUsage,
