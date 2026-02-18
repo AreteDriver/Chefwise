@@ -23,9 +23,13 @@ export default function RecipeCard({ recipe, onSave, onClick }) {
   const totalTime = (prepTime || 0) + (cookTime || 0);
 
   return (
-    <div
+    <article
       className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-200 cursor-pointer"
       onClick={onClick}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(); } }}
+      tabIndex={onClick ? 0 : undefined}
+      role={onClick ? 'button' : undefined}
+      aria-label={onClick ? `View recipe: ${title}` : undefined}
     >
       <div className="p-6">
         <div className="flex justify-between items-start mb-3">
@@ -37,13 +41,14 @@ export default function RecipeCard({ recipe, onSave, onClick }) {
                 onSave(recipe);
               }}
               className="text-primary hover:text-primary-dark"
-              aria-label="Save recipe"
+              aria-label={`Save recipe: ${title}`}
             >
               <svg
                 className="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -133,6 +138,6 @@ export default function RecipeCard({ recipe, onSave, onClick }) {
           </div>
         )}
       </div>
-    </div>
+    </article>
   );
 }

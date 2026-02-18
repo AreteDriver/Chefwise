@@ -64,7 +64,12 @@ describe('Stripe Webhook Handler', () => {
     jest.clearAllMocks();
 
     // Setup mock chain
-    mocks.collection.mockReturnValue({ doc: mocks.doc });
+    mocks.collection.mockImplementation((name) => {
+      if (name === 'webhook_events') {
+        return { add: jest.fn().mockResolvedValue() };
+      }
+      return { doc: mocks.doc };
+    });
     mocks.doc.mockReturnValue({ update: mocks.update });
     mocks.update.mockResolvedValue();
     mocks.subscriptionsRetrieve.mockResolvedValue({
@@ -157,6 +162,7 @@ describe('Stripe Webhook Handler', () => {
     });
 
     it('should handle missing firebaseUID in metadata', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       mocks.constructEvent.mockReturnValue({
         type: 'checkout.session.completed',
         data: {
@@ -170,7 +176,8 @@ describe('Stripe Webhook Handler', () => {
       await handler(mockReq, mockRes);
 
       expect(mocks.update).not.toHaveBeenCalled();
-      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      consoleSpy.mockRestore();
     });
   });
 
@@ -262,6 +269,7 @@ describe('Stripe Webhook Handler', () => {
     });
 
     it('should handle missing firebaseUID in customer metadata', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       mocks.constructEvent.mockReturnValue({
         type: 'customer.subscription.updated',
         data: {
@@ -280,7 +288,8 @@ describe('Stripe Webhook Handler', () => {
       await handler(mockReq, mockRes);
 
       expect(mocks.update).not.toHaveBeenCalled();
-      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      consoleSpy.mockRestore();
     });
   });
 
@@ -311,6 +320,7 @@ describe('Stripe Webhook Handler', () => {
     });
 
     it('should handle missing firebaseUID', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       mocks.constructEvent.mockReturnValue({
         type: 'customer.subscription.deleted',
         data: {
@@ -327,6 +337,8 @@ describe('Stripe Webhook Handler', () => {
       await handler(mockReq, mockRes);
 
       expect(mocks.update).not.toHaveBeenCalled();
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      consoleSpy.mockRestore();
     });
   });
 

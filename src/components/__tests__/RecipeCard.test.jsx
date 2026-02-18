@@ -83,7 +83,7 @@ describe('RecipeCard', () => {
     const handleSave = jest.fn();
     render(<RecipeCard recipe={mockRecipe} onSave={handleSave} />);
 
-    const saveButton = screen.getByLabelText('Save recipe');
+    const saveButton = screen.getByLabelText('Save recipe: Grilled Chicken Salad');
     fireEvent.click(saveButton);
 
     expect(handleSave).toHaveBeenCalledWith(mockRecipe);
@@ -94,7 +94,7 @@ describe('RecipeCard', () => {
     const handleSave = jest.fn();
     render(<RecipeCard recipe={mockRecipe} onClick={handleClick} onSave={handleSave} />);
 
-    const saveButton = screen.getByLabelText('Save recipe');
+    const saveButton = screen.getByLabelText('Save recipe: Grilled Chicken Salad');
     fireEvent.click(saveButton);
 
     expect(handleSave).toHaveBeenCalled();
@@ -103,7 +103,7 @@ describe('RecipeCard', () => {
 
   it('does not render save button when onSave is not provided', () => {
     render(<RecipeCard recipe={mockRecipe} />);
-    expect(screen.queryByLabelText('Save recipe')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Save recipe:/)).not.toBeInTheDocument();
   });
 
   it('handles recipe without optional fields', () => {

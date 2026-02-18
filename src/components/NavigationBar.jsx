@@ -33,7 +33,7 @@ export default function NavigationBar({ user, currentPage = '' }) {
   };
 
   return (
-    <nav className="bg-white shadow-sm">
+    <nav className="bg-white shadow-sm" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -41,17 +41,20 @@ export default function NavigationBar({ user, currentPage = '' }) {
             <button
               onClick={() => handleNavigation('/')}
               className="text-2xl font-bold text-primary hover:text-primary/90 transition-colors"
+              aria-label="ChefWise home"
             >
               ChefWise
             </button>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-4">
+          <div className="hidden md:flex md:items-center md:space-x-4" role="menubar">
             {visibleNavigation.map((item) => (
               <button
                 key={item.name}
                 onClick={() => handleNavigation(item.href)}
+                role="menuitem"
+                aria-current={item.current ? 'page' : undefined}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   item.current
                     ? 'bg-primary/10 text-primary'
@@ -84,15 +87,16 @@ export default function NavigationBar({ user, currentPage = '' }) {
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary hover:bg-gray-100 transition-colors"
-              aria-expanded="false"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-menu"
             >
-              <span className="sr-only">Open main menu</span>
+              <span className="sr-only">{mobileMenuOpen ? 'Close main menu' : 'Open main menu'}</span>
               {!mobileMenuOpen ? (
-                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                 </svg>
               ) : (
-                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               )}
@@ -103,12 +107,14 @@ export default function NavigationBar({ user, currentPage = '' }) {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden">
+        <div className="md:hidden" id="mobile-menu" role="menu">
           <div className="px-2 pt-2 pb-3 space-y-1">
             {visibleNavigation.map((item) => (
               <button
                 key={item.name}
                 onClick={() => handleNavigation(item.href)}
+                role="menuitem"
+                aria-current={item.current ? 'page' : undefined}
                 className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors ${
                   item.current
                     ? 'bg-primary/10 text-primary'
@@ -121,6 +127,7 @@ export default function NavigationBar({ user, currentPage = '' }) {
             {user && (
               <button
                 onClick={handleSignOut}
+                role="menuitem"
                 className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 transition-colors"
               >
                 Sign Out

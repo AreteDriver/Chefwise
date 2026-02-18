@@ -3,6 +3,11 @@ jest.mock('@/middleware/withAuth', () => ({
   withAuth: (handler) => handler,
 }));
 
+// Mock the rate limit middleware to bypass in tests
+jest.mock('@/middleware/rateLimit', () => ({
+  rateLimit: () => () => false,
+}));
+
 import { handler } from '@/app/api/chat-recipe/handler';
 
 // Mock object to avoid Jest hoisting issues
@@ -72,7 +77,7 @@ describe('chat-recipe API', () => {
       await handler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Messages are required' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Messages are required and must be an array' });
     });
 
     it('returns 400 when messages is not an array', async () => {
@@ -81,7 +86,7 @@ describe('chat-recipe API', () => {
       await handler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Messages are required' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Messages are required and must be an array' });
     });
 
     it('returns 400 when messages is null', async () => {
@@ -139,7 +144,8 @@ describe('chat-recipe API', () => {
       expect(mocks.create).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'gpt-3.5-turbo',
-        })
+        }),
+        expect.any(Object)
       );
     });
 
@@ -163,7 +169,8 @@ describe('chat-recipe API', () => {
           messages: expect.arrayContaining([
             ...userMessages,
           ]),
-        })
+        }),
+        expect.any(Object)
       );
     });
 
@@ -186,7 +193,8 @@ describe('chat-recipe API', () => {
               content: expect.stringContaining('ChefWise'),
             }),
           ]),
-        })
+        }),
+        expect.any(Object)
       );
     });
 
@@ -209,7 +217,8 @@ describe('chat-recipe API', () => {
               content: expect.stringContaining('cooking assistant'),
             }),
           ]),
-        })
+        }),
+        expect.any(Object)
       );
     });
 
@@ -227,7 +236,8 @@ describe('chat-recipe API', () => {
       expect(mocks.create).toHaveBeenCalledWith(
         expect.objectContaining({
           max_tokens: 500,
-        })
+        }),
+        expect.any(Object)
       );
     });
 
@@ -245,22 +255,19 @@ describe('chat-recipe API', () => {
       expect(mocks.create).toHaveBeenCalledWith(
         expect.objectContaining({
           temperature: 0.8,
-        })
+        }),
+        expect.any(Object)
       );
     });
   });
 
   describe('Conversation handling', () => {
-    it('handles empty messages array', async () => {
+    it('rejects empty messages array', async () => {
       req.body = { messages: [] };
-
-      mocks.create.mockResolvedValue({
-        choices: [{ message: { content: 'Hello!' } }],
-      });
 
       await handler(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.status).toHaveBeenCalledWith(400);
     });
 
     it('handles long conversation history', async () => {
@@ -293,7 +300,7 @@ describe('chat-recipe API', () => {
       await handler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to get response' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to get response. Please try again.' });
     });
 
     it('returns 500 on rate limit error', async () => {
