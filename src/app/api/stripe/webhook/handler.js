@@ -41,6 +41,20 @@ try {
   console.error('Firebase admin initialization error:', error);
 }
 
+async function logWebhookEvent(eventType, status, details = {}) {
+  if (!db) return;
+  try {
+    await db.collection('webhook_events').add({
+      eventType,
+      status,
+      ...details,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (err) {
+    console.error('Failed to log webhook event:', err);
+  }
+}
+
 // Disable body parser for webhook (Pages Router compat)
 export const config = {
   api: {
@@ -150,13 +164,21 @@ async function handleCheckoutComplete(session) {
   const firebaseUID = session.metadata?.firebaseUID;
 
   if (!firebaseUID) {
-    console.error('No Firebase UID in session metadata');
-    return;
+    await logWebhookEvent('checkout.session.completed', 'failed', {
+      reason: 'missing_firebase_uid',
+      stripeSessionId: session.id,
+      stripeCustomerId: session.customer,
+    });
+    throw new Error('No Firebase UID in checkout session metadata');
   }
 
   if (!isValidFirebaseUID(firebaseUID)) {
-    console.error('Invalid Firebase UID format:', firebaseUID);
-    return;
+    await logWebhookEvent('checkout.session.completed', 'failed', {
+      reason: 'invalid_firebase_uid',
+      firebaseUID,
+      stripeSessionId: session.id,
+    });
+    throw new Error(`Invalid Firebase UID format: ${firebaseUID}`);
   }
 
   let planTier = session.metadata?.planTier || 'pro';
@@ -183,6 +205,12 @@ async function handleCheckoutComplete(session) {
     subscriptionUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
+  await logWebhookEvent('checkout.session.completed', 'success', {
+    firebaseUID,
+    planTier,
+    billingPeriod,
+  });
+
   console.log(`User ${firebaseUID} upgraded to ${planTier} (${billingPeriod})`);
 }
 
@@ -191,13 +219,21 @@ async function handleSubscriptionUpdate(subscription) {
   const firebaseUID = customer.metadata?.firebaseUID || subscription.metadata?.firebaseUID;
 
   if (!firebaseUID) {
-    console.error('No Firebase UID in customer or subscription metadata');
-    return;
+    await logWebhookEvent('subscription.updated', 'failed', {
+      reason: 'missing_firebase_uid',
+      stripeSubscriptionId: subscription.id,
+      stripeCustomerId: subscription.customer,
+    });
+    throw new Error('No Firebase UID in customer or subscription metadata');
   }
 
   if (!isValidFirebaseUID(firebaseUID)) {
-    console.error('Invalid Firebase UID format:', firebaseUID);
-    return;
+    await logWebhookEvent('subscription.updated', 'failed', {
+      reason: 'invalid_firebase_uid',
+      firebaseUID,
+      stripeSubscriptionId: subscription.id,
+    });
+    throw new Error(`Invalid Firebase UID format: ${firebaseUID}`);
   }
 
   const userRef = db.collection('users').doc(firebaseUID);
@@ -217,6 +253,8 @@ async function handleSubscriptionUpdate(subscription) {
     subscriptionPeriodEnd: new Date(subscription.current_period_end * 1000),
   });
 
+  await logWebhookEvent('subscription.updated', 'success', { firebaseUID, planTier, status });
+
   console.log(`Subscription updated for user ${firebaseUID}: ${planTier} (${status})`);
 }
 
@@ -225,13 +263,21 @@ async function handleSubscriptionDeleted(subscription) {
   const firebaseUID = customer.metadata?.firebaseUID || subscription.metadata?.firebaseUID;
 
   if (!firebaseUID) {
-    console.error('No Firebase UID in customer or subscription metadata');
-    return;
+    await logWebhookEvent('subscription.deleted', 'failed', {
+      reason: 'missing_firebase_uid',
+      stripeSubscriptionId: subscription.id,
+      stripeCustomerId: subscription.customer,
+    });
+    throw new Error('No Firebase UID in customer or subscription metadata');
   }
 
   if (!isValidFirebaseUID(firebaseUID)) {
-    console.error('Invalid Firebase UID format:', firebaseUID);
-    return;
+    await logWebhookEvent('subscription.deleted', 'failed', {
+      reason: 'invalid_firebase_uid',
+      firebaseUID,
+      stripeSubscriptionId: subscription.id,
+    });
+    throw new Error(`Invalid Firebase UID format: ${firebaseUID}`);
   }
 
   const userRef = db.collection('users').doc(firebaseUID);
@@ -242,6 +288,8 @@ async function handleSubscriptionDeleted(subscription) {
     subscriptionUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
+  await logWebhookEvent('subscription.deleted', 'success', { firebaseUID });
+
   console.log(`Subscription canceled for user ${firebaseUID}`);
 }
 
@@ -250,13 +298,21 @@ async function handlePaymentSucceeded(invoice) {
   const firebaseUID = customer.metadata?.firebaseUID;
 
   if (!firebaseUID) {
-    console.error('No Firebase UID in customer metadata');
-    return;
+    await logWebhookEvent('invoice.payment_succeeded', 'failed', {
+      reason: 'missing_firebase_uid',
+      stripeInvoiceId: invoice.id,
+      stripeCustomerId: invoice.customer,
+    });
+    throw new Error('No Firebase UID in customer metadata');
   }
 
   if (!isValidFirebaseUID(firebaseUID)) {
-    console.error('Invalid Firebase UID format:', firebaseUID);
-    return;
+    await logWebhookEvent('invoice.payment_succeeded', 'failed', {
+      reason: 'invalid_firebase_uid',
+      firebaseUID,
+      stripeInvoiceId: invoice.id,
+    });
+    throw new Error(`Invalid Firebase UID format: ${firebaseUID}`);
   }
 
   const userRef = db.collection('users').doc(firebaseUID);
@@ -267,6 +323,11 @@ async function handlePaymentSucceeded(invoice) {
     paymentFailed: false,
   });
 
+  await logWebhookEvent('invoice.payment_succeeded', 'success', {
+    firebaseUID,
+    amount: invoice.amount_paid / 100,
+  });
+
   console.log(`Payment succeeded for user ${firebaseUID}: $${invoice.amount_paid / 100}`);
 }
 
@@ -275,13 +336,21 @@ async function handlePaymentFailed(invoice) {
   const firebaseUID = customer.metadata?.firebaseUID;
 
   if (!firebaseUID) {
-    console.error('No Firebase UID in customer metadata');
-    return;
+    await logWebhookEvent('invoice.payment_failed', 'failed', {
+      reason: 'missing_firebase_uid',
+      stripeInvoiceId: invoice.id,
+      stripeCustomerId: invoice.customer,
+    });
+    throw new Error('No Firebase UID in customer metadata');
   }
 
   if (!isValidFirebaseUID(firebaseUID)) {
-    console.error('Invalid Firebase UID format:', firebaseUID);
-    return;
+    await logWebhookEvent('invoice.payment_failed', 'failed', {
+      reason: 'invalid_firebase_uid',
+      firebaseUID,
+      stripeInvoiceId: invoice.id,
+    });
+    throw new Error(`Invalid Firebase UID format: ${firebaseUID}`);
   }
 
   const userRef = db.collection('users').doc(firebaseUID);
@@ -289,6 +358,11 @@ async function handlePaymentFailed(invoice) {
   await userRef.update({
     paymentFailed: true,
     lastPaymentFailureDate: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  await logWebhookEvent('invoice.payment_failed', 'success', {
+    firebaseUID,
+    stripeInvoiceId: invoice.id,
   });
 
   console.log(`Payment failed for user ${firebaseUID}`);

@@ -23,7 +23,7 @@ export default function Providers({ children }) {
 
     const timeout = setTimeout(() => {
       setLoading(false);
-    }, 5000);
+    }, 3000);
 
     try {
       authUnsubscribe = onAuthStateChanged(auth, (user) => {

@@ -64,11 +64,11 @@ describe('BottomTabBar', () => {
     render(<BottomTabBar activeTab="home" />);
 
     // Each tab should have an SVG icon
-    const buttons = screen.getAllByRole('button');
-    expect(buttons).toHaveLength(4);
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs).toHaveLength(4);
 
-    buttons.forEach((button) => {
-      expect(button.querySelector('svg')).toBeInTheDocument();
+    tabs.forEach((tab) => {
+      expect(tab.querySelector('svg')).toBeInTheDocument();
     });
   });
 

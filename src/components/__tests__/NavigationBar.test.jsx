@@ -42,7 +42,7 @@ describe('NavigationBar', () => {
   describe('Unauthenticated user', () => {
     it('shows Home link', () => {
       render(<NavigationBar user={null} />);
-      expect(screen.getByRole('button', { name: 'Home' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Home' })).toBeInTheDocument();
     });
 
     it('shows Get Started button', () => {
@@ -52,9 +52,9 @@ describe('NavigationBar', () => {
 
     it('does not show authenticated-only links', () => {
       render(<NavigationBar user={null} />);
-      expect(screen.queryByRole('button', { name: 'Recipes' })).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'Pantry' })).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'Planner' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'Recipes' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'Pantry' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'Planner' })).not.toBeInTheDocument();
     });
 
     it('does not show Sign Out button', () => {
@@ -69,12 +69,12 @@ describe('NavigationBar', () => {
     it('shows all navigation links', () => {
       render(<NavigationBar user={mockUser} />);
 
-      expect(screen.getByRole('button', { name: 'Home' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Recipes' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Pantry' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Planner' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Tracker' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Profile' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Home' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Recipes' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Pantry' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Planner' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Tracker' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Profile' })).toBeInTheDocument();
     });
 
     it('shows Sign Out button', () => {
@@ -105,31 +105,31 @@ describe('NavigationBar', () => {
 
     it('navigates to recipes when Recipes is clicked', () => {
       render(<NavigationBar user={mockUser} />);
-      fireEvent.click(screen.getByRole('button', { name: 'Recipes' }));
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Recipes' }));
       expect(mockPush).toHaveBeenCalledWith('/recipes');
     });
 
     it('navigates to pantry when Pantry is clicked', () => {
       render(<NavigationBar user={mockUser} />);
-      fireEvent.click(screen.getByRole('button', { name: 'Pantry' }));
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Pantry' }));
       expect(mockPush).toHaveBeenCalledWith('/pantry');
     });
 
     it('navigates to planner when Planner is clicked', () => {
       render(<NavigationBar user={mockUser} />);
-      fireEvent.click(screen.getByRole('button', { name: 'Planner' }));
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Planner' }));
       expect(mockPush).toHaveBeenCalledWith('/planner');
     });
 
     it('navigates to tracker when Tracker is clicked', () => {
       render(<NavigationBar user={mockUser} />);
-      fireEvent.click(screen.getByRole('button', { name: 'Tracker' }));
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Tracker' }));
       expect(mockPush).toHaveBeenCalledWith('/tracker');
     });
 
     it('navigates to profile when Profile is clicked', () => {
       render(<NavigationBar user={mockUser} />);
-      fireEvent.click(screen.getByRole('button', { name: 'Profile' }));
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Profile' }));
       expect(mockPush).toHaveBeenCalledWith('/profile');
     });
   });
@@ -140,7 +140,7 @@ describe('NavigationBar', () => {
     it('highlights current page', () => {
       render(<NavigationBar user={mockUser} currentPage="pantry" />);
 
-      const pantryButton = screen.getByRole('button', { name: 'Pantry' });
+      const pantryButton = screen.getByRole('menuitem', { name: 'Pantry' });
       expect(pantryButton).toHaveClass('bg-primary/10');
       expect(pantryButton).toHaveClass('text-primary');
     });
@@ -148,7 +148,7 @@ describe('NavigationBar', () => {
     it('does not highlight non-current pages', () => {
       render(<NavigationBar user={mockUser} currentPage="pantry" />);
 
-      const homeButton = screen.getByRole('button', { name: 'Home' });
+      const homeButton = screen.getByRole('menuitem', { name: 'Home' });
       expect(homeButton).not.toHaveClass('bg-primary/10');
     });
   });
@@ -164,16 +164,15 @@ describe('NavigationBar', () => {
     it('opens mobile menu when button is clicked', () => {
       render(<NavigationBar user={mockUser} />);
 
-      // Menu should be closed initially
-      const mobileMenuItems = screen.queryAllByRole('button', { name: 'Pantry' });
-      // Only desktop button visible (hidden by CSS, but rendered)
+      // Menu should be closed initially - only desktop menuitems
+      const mobileMenuItems = screen.queryAllByRole('menuitem', { name: 'Pantry' });
       expect(mobileMenuItems.length).toBe(1);
 
       // Click to open
       fireEvent.click(screen.getByRole('button', { name: 'Open main menu' }));
 
       // Now mobile menu items should also be rendered
-      const allPantryButtons = screen.getAllByRole('button', { name: 'Pantry' });
+      const allPantryButtons = screen.getAllByRole('menuitem', { name: 'Pantry' });
       expect(allPantryButtons.length).toBe(2); // Desktop + mobile
     });
 
@@ -183,8 +182,8 @@ describe('NavigationBar', () => {
       // Open menu
       fireEvent.click(screen.getByRole('button', { name: 'Open main menu' }));
 
-      // Click a nav item in mobile menu (second Pantry button)
-      const pantryButtons = screen.getAllByRole('button', { name: 'Pantry' });
+      // Click a nav item in mobile menu (second Pantry menuitem)
+      const pantryButtons = screen.getAllByRole('menuitem', { name: 'Pantry' });
       fireEvent.click(pantryButtons[1]);
 
       expect(mockPush).toHaveBeenCalledWith('/pantry');

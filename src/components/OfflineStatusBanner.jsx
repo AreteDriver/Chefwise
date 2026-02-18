@@ -24,7 +24,7 @@ export default function OfflineStatusBanner() {
   // Syncing state - yellow banner
   if (isSyncing) {
     return (
-      <div className="bg-yellow-500 text-white px-4 py-2 text-center text-sm">
+      <div className="bg-yellow-500 text-white px-4 py-2 text-center text-sm" role="status" aria-live="polite">
         <div className="flex items-center justify-center gap-2">
           <svg
             className="w-4 h-4 animate-spin"
@@ -48,7 +48,7 @@ export default function OfflineStatusBanner() {
   // Error state - red banner with retry
   if (syncError) {
     return (
-      <div className="bg-red-500 text-white px-4 py-2 text-sm">
+      <div className="bg-red-500 text-white px-4 py-2 text-sm" role="alert">
         <div className="flex items-center justify-between max-w-screen-xl mx-auto">
           <div className="flex items-center gap-2">
             <svg
@@ -101,7 +101,7 @@ export default function OfflineStatusBanner() {
   // Offline state - red banner
   if (!isOnline) {
     return (
-      <div className="bg-red-600 text-white px-4 py-2 text-sm">
+      <div className="bg-red-600 text-white px-4 py-2 text-sm" role="alert">
         <div className="flex items-center justify-between max-w-screen-xl mx-auto">
           <div className="flex items-center gap-2">
             <svg
@@ -136,7 +136,7 @@ export default function OfflineStatusBanner() {
   // Online with pending items - amber banner
   if (pendingSyncCount > 0) {
     return (
-      <div className="bg-amber-500 text-white px-4 py-2 text-sm">
+      <div className="bg-amber-500 text-white px-4 py-2 text-sm" role="status" aria-live="polite">
         <div className="flex items-center justify-between max-w-screen-xl mx-auto">
           <div className="flex items-center gap-2">
             <svg

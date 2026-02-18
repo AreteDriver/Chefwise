@@ -3,6 +3,11 @@ jest.mock('@/middleware/withAuth', () => ({
   withAuth: (handler) => handler,
 }));
 
+// Mock the rate limit middleware to bypass in tests
+jest.mock('@/middleware/rateLimit', () => ({
+  rateLimit: () => () => false,
+}));
+
 import { handler } from '@/app/api/generate-recipe/handler';
 
 // Mock object to avoid Jest hoisting issues
@@ -137,7 +142,8 @@ describe('generate-recipe API', () => {
       expect(mocks.create).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'gpt-3.5-turbo',
-        })
+        }),
+        expect.any(Object)
       );
     });
 
@@ -164,7 +170,8 @@ describe('generate-recipe API', () => {
               content: expect.stringContaining('tomatoes, basil, mozzarella'),
             }),
           ]),
-        })
+        }),
+        expect.any(Object)
       );
     });
 
@@ -191,7 +198,8 @@ describe('generate-recipe API', () => {
               content: expect.stringContaining('professional chef'),
             }),
           ]),
-        })
+        }),
+        expect.any(Object)
       );
     });
   });
@@ -285,10 +293,10 @@ describe('generate-recipe API', () => {
       await handler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to generate recipe' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to generate recipe. Please try again.' });
     });
 
-    it('returns 500 when response is invalid JSON', async () => {
+    it('returns 502 when response is invalid JSON', async () => {
       req.body = { ingredients: 'test' };
 
       mocks.create.mockResolvedValue({
@@ -303,8 +311,8 @@ describe('generate-recipe API', () => {
 
       await handler(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to generate recipe' });
+      expect(res.status).toHaveBeenCalledWith(502);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to parse recipe response. Please try again.' });
     });
 
     it('logs errors to console', async () => {
