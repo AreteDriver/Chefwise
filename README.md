@@ -1,6 +1,14 @@
 # ChefWise
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 **AI-powered meal planning and recipe generation** — A Next.js PWA with Firebase backend, Stripe subscriptions, and offline-first architecture.
+
+| | |
+|---|---|
+| **Status** | Active |
+| **Stack** | Next.js 14, React 18, Firebase, Stripe, OpenAI GPT-4o |
+| **Platform** | Web (PWA) + iOS + Android (Capacitor) |
 
 ---
 
