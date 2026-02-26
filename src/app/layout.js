@@ -1,5 +1,6 @@
 import '@/styles/globals.css';
 import Providers from './providers';
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata = {
   title: 'ChefWise - AI Cooking Assistant',
@@ -36,6 +37,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );
